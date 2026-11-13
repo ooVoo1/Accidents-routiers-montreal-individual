@@ -19,3 +19,7 @@ class Carte(ctk.CTkFrame):
         # Encadré des statistiques
         self.stats_frame = ctk.CTkFrame(self, fg_color="white", border_width=1, border_color="#D9DEE5", corner_radius=12)
         self.stats_frame.place(relx=0.0175, rely=0.1, anchor="nw", relwidth=0.20, relheight=0.5)
+        #Créer et placer Boutton pour actualiser
+        self.bouton_actualiser = ctk.CTkButton(self,text="Actualiser la carte", compound="left", 
+        command=self.map.update_map, font=("Arial", 15, "bold"), height=52, width=290, corner_radius=10)
+        self.bouton_actualiser.place(relx=0.0175, rely=0.65, anchor="nw", relwidth=0.20, relheight=0.05)

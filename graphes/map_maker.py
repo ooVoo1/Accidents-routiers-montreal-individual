@@ -13,3 +13,5 @@ class MapMaker(ctk.CTkFrame):
         # Centrer sur Montréal (Coordonnées exactes trouvée par ChatGPT)
         self.carte.set_position(45.5017, -73.5673)
         self.carte.set_zoom(11)
+    def update_map(self):
+        print("Focntionne ")
