@@ -13,3 +13,4 @@ class Carte(ctk.CTkFrame):
 
     def creer_page_carte(self):
         self.map = MapMaker(self,self.handler)
+        self.map.place(relx=0.6, rely=0.5, anchor="center", relwidth=0.75, relheight=0.85)
