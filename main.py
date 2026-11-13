@@ -1,211 +1,261 @@
 import customtkinter as ctk
 import tkinter as tk
-from tkinter import filedialog, messagebox
 import pandas as pd
-from matplotlib.ticker import AutoMinorLocator
 
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from PIL import Image
 
-import os
+from datahandler import DataHandler
 
-class DataHandler():
-    """Fait la gestion des fichiers et du DataFrame."""
-
-    def __init__(self):
-        self.df = pd.DataFrame() # DataFrame initialement vide.
-        self.chemin_courante = "" # Chemin courante du fichier
-
-    def charger_csv(self):
-        """Charger les données."""
-
-        # Demander à l'utilisateur de choisir un fichier CSV.
-
-        chemin = filedialog.askopenfilename(title="Charger fichier CSV", filetypes=[("Fichiers CSV", "*.csv")])
-
-        # Si le cours de chargement n'est pas annulée, implementer les données du fichier CSV choisi dans le dataframe.
-        # Assigner le chemin dans la variable 'chemin_courante'.
-        # Lancer un erreur si quelque chose ne marche pas.
-
-        if not chemin:
-            return False
-
-        try:
-            self.df = pd.read_csv(chemin)
-            self.chemin_courante = chemin
-            print("Données chargées!")
-            return True
-
-        except Exception as erreur: 
-            messagebox.showerror("Erreur", str(erreur))
-            return False
-    def sauvegarder_csv(self):
-        """Sauvegarder les données."""
-
-        # Vérifier si un fichier CSV à été chargé. Si oui, garder le nom du fichier courante, sinon on le laisse vide.
-
-        fichier_courante = os.path.basename(self.chemin_courante) if os.path.exists(self.chemin_courante) else ""
-
-        # Ouvrir l'application d'enregistrement pour sauvegarder le fichier.
-        # Si un fichier à deja été chargée, sauvegarder avec le nom courant si l'utilisateur desire d'écraser le fichier actuel.
-        # Il est possible de changer le nom du fichier à sauvegarder si l'utilisateur désire de créer un nouveau fichier .csv,
-        # avec les données.
-
-        chemin = filedialog.asksaveasfilename (
-            title="Sauvegarder comme fichier CSV", 
-            filetypes=[("Fichiers CSV", "*.csv")], 
-            initialfile=fichier_courante
-        )
-
-        # Si l'opération d'enregistrement en cours est annulée, ne rien retourner.
-
-        if not chemin:
-            return
-
-        # Pour éviter d'écrire le suffixe de l'extension de fichier dans la zone de texte. La fonction le fait automatiquement.
-
-        if not chemin.lower().endswith(".csv"):
-            chemin += ".csv"
-
-        # Gestion d'erreur.
-        # Si un erreur est déclenché, lancer un alerte. Sinon, enregistrer le fichier CSV.
-
-        try:
-            self.df.to_csv(chemin)
-            print("Données sauvegardées!")
-        except Exception as erreur:
-            messagebox.showerror("Erreur", str(erreur))
-
-class GraphMaker(ctk.CTkFrame):
-    def __init__(self, master):
-        super().__init__(master)
-        # Création de la figure
-        self.figure = Figure(figsize=(7, 4))
-        # Création des axes du graphique
-        self.ax = self.figure.add_subplot(111)
-         # Intégration du graphique dans CustomTkinter
-        self.canvas = FigureCanvasTkAgg(self.figure, master=self)
-        self.canvas.get_tk_widget().pack(fill="both", expand=True)
-
-    def create_graph(self, x, y, titre, label_y):
-        # Effacer ancien graphique
-        self.ax.clear()
-        # Tracer la nouvelle courbe
-        self.ax.plot(x, y, marker="o")
-        # Personnaliser
-        self.ax.set_xticks(x)
-        self.ax.set_title(titre)
-        self.ax.set_xlabel("Année")
-        self.ax.set_ylabel(label_y)
-        # Ajouter quadrillage mineur
-        self.ax.xaxis.set_minor_locator(AutoMinorLocator(5))
-        self.ax.yaxis.set_minor_locator(AutoMinorLocator(5))
-
-        # Quadrillage majeur
-        self.ax.grid(which="major", linestyle="-", linewidth=0.8, alpha=0.5)
-
-        # Quadrillage mineur
-        self.ax.grid(which="minor", linestyle=":", linewidth=0.5, alpha=0.5)        
-        # Ajuster espacement
-        self.figure.tight_layout()
-        # Refaire graphique
-        self.canvas.draw_idle()
+from pages.aide import Aide
+from pages.circulaire import Circulaire
+from pages.graphique import Graphique
+from pages.barres import Barres
 
 class MainApplication(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("Accidents routiers Montreal")
+        self.title("RouteSûre")
         self.configure(fg_color="white")
         self.geometry("1240x768")
         self.handler = DataHandler()
-        self.graph = GraphMaker(self)
-        self.graph.place(relx=0.6, rely=0.35, anchor="center", relwidth=0.75, relheight=0.7)
 
-        """
-        self.df = pd.read_csv("collisions_routieres.csv")
-        self.df_filtre = self.df.copy()
-        self.df_resultats = pd.DataFrame()
-        """
+        #Créer le menu
         self.create_menu()
-    def charger_et_actualiser(self):
-        if self.handler.charger_csv():
-            self.update_graph(self.selection.get())
 
-    
+        #Pour que les pages remplissent bien la fenêtre
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
 
-    def update_graph(self, choix):
-        #Si les données ne sont pas chargées, arrêter l'éxecution
+        #Créer pages
+        self.page_accueil = ctk.CTkFrame(self, fg_color= "white")
+        self.page_aide = Aide(self, fg_color="white")
+        self.page_graphiques = Graphique(self, self.handler, fg_color="white")
+        self.page_pie = Circulaire(self, self.handler, fg_color="white")
+        self.page_barres = Barres(self, self.handler, fg_color="white")
+
+        #Placer pages
+        self.page_accueil.grid(row=0, column=0, sticky="nsew")
+        self.page_graphiques.grid(row=0, column=0, sticky="nsew")
+        self.page_aide.grid(row=0, column=0, sticky="nsew")
+        self.page_pie.grid(row=0, column=0, sticky="nsew")
+        self.page_barres.grid(row=0, column=0, sticky="nsew")
+
+        self.page_actuelle = self.page_accueil
+
+        #Création page accueil
+        self.creer_accueil()
+        self.afficher_page(self.page_accueil)
+
+    def creer_accueil(self):
+        # Pour que l'accueil s'adapte à la taille de la fenêtre
+        self.page_accueil.grid_columnconfigure(0, weight=1)
+        self.page_accueil.grid_rowconfigure(0, weight=4)
+        self.page_accueil.grid_rowconfigure(2, weight=3)
+        self.page_accueil.grid_rowconfigure(3, weight=1)
+
+        # Place pour le logo RouteSure
+        place_logo = ctk.CTkFrame(self.page_accueil,fg_color="transparent")
+        place_logo.grid(row=0, column=0, sticky="nsew")
+
+        # Loader et recadrer le logo
+        image = Image.open(self.handler.resource_path("images/logo_routesure.png"))
+        largeur, hauteur = image.size
+        image = image.crop((0, int(hauteur * 0.22), largeur, int(hauteur * 0.78)))
+
+        #Afficher et placer logo
+        self.logo = ctk.CTkImage(light_image=image, dark_image=image, size=(610, 255))
+        label_logo = ctk.CTkLabel(place_logo,image=self.logo,text="")
+        label_logo.pack(expand=True)
+
+        # Adapter la taille du logo à la fenêtre
+        def adapter_logo(event):
+            proportion = image.width / image.height
+            largeur_logo = min(
+                int(event.width * 0.8), 
+                960, 
+                int(event.height * 0.85 * proportion)
+            )
+            if largeur_logo > 0:
+                hauteur_logo = int(largeur_logo / proportion)
+                self.logo.configure(size=(largeur_logo, hauteur_logo))
+
+        place_logo.bind("<Configure>", adapter_logo)
+
+        # Description de l'app en dessous du logo
+        description = ctk.CTkLabel(self.page_accueil, text="Explorez les données des collisions routières de Montréal", font=("Arial", 16), text_color="#64748B")
+        description.grid(row=1, column=0, pady=10)
+
+        # Emplacements des gros boutons
+        conteneur = ctk.CTkFrame(self.page_accueil, fg_color="transparent")
+        conteneur.grid(row=2, column=0, sticky="nsew", padx=50, pady=10)
+        conteneur.grid_rowconfigure(0, weight=1)
+
+        for i in range(3):
+            conteneur.grid_columnconfigure(i, weight=1, uniform="cartes")
+
+        #Liste de tuples avec le contenu des boutons
+        pages = [("Évolution annuelle", "Visualiser l'évolution des collisions au fil des années.", self.page_graphiques),
+        ("Graphique circulaire", "Analyser la répartition des collisions selon leur gravité.", self.page_pie),
+        ("Graphique à barres", "Comparer différentes catégories de collisions.", self.page_barres)]
+
+        #Mettre les icones des 3 gros boutons dans une variable
+        icones = ["icone_evolution.png", "icone_circulaire.png", "icone_barres.png"]
+
+        #Pour garder les icones en mémoire
+        self.icones_accueil = []
+
+        # Création des trois gros boutons
+        for i, (titre, description, page) in enumerate(pages):
+            #Création et placement de l'objet
+            gros_bouton = ctk.CTkFrame(conteneur, fg_color="#EDF5FF", corner_radius=12)
+            gros_bouton.grid(row=0, column=i, padx=10, sticky="nsew")
+
+            # Centrer le contenu dans le bouton
+            contenu = ctk.CTkFrame(gros_bouton, fg_color="transparent")
+            contenu.pack(expand=True)
+
+            #Mettre icone du bouton
+            icone = ctk.CTkImage(light_image=Image.open(self.handler.resource_path("images/" + icones[i])), size=(48, 48))
+            self.icones_accueil.append(icone)
+            image_gros_bouton = ctk.CTkLabel(contenu, image=icone, text="")
+            image_gros_bouton.pack(pady=(0, 12))
+
+            # Titre du bouton
+            titre_gros_bouton = ctk.CTkLabel(contenu, text=titre, font=("Arial", 19, "bold"), text_color="#133E70")
+            titre_gros_bouton.pack(pady=(0, 10))
+
+            # Description du graphique associé au bouton
+            texte_gros_bouton = ctk.CTkLabel(contenu, text=description, font=("Arial", 14), text_color="#64748B", wraplength=260)
+            texte_gros_bouton.pack(padx=15)
+
+            # Rendre bouton clickable (parceque pour l'instant ce n'était qu'un carré avec du texte et une image)
+            for widget in (gros_bouton, contenu, image_gros_bouton, titre_gros_bouton, texte_gros_bouton):
+                widget.bind("<Button-1>", lambda event, p=page: self.afficher_page(p))
+
+        # place des boutons aide et charger (AC)
+        place_boutons_AC = ctk.CTkFrame(self.page_accueil,fg_color="transparent")
+        place_boutons_AC.grid(row=3, column=0, sticky="nsew")
+
+        # Pour que les boutons aide et charger soient alignés
+        ligne_boutons = ctk.CTkFrame(place_boutons_AC, fg_color="transparent")
+        ligne_boutons.pack(expand=True)
+
+        # image de fichier pour bouton charger
+        self.icone_charger = ctk.CTkImage(light_image=Image.open(self.handler.resource_path("images/icone_charger.png")), size=(24, 24))
+
+        # bouton charger CSV
+        bouton_charger = ctk.CTkButton(ligne_boutons, text="Charger des données CSV", image=self.icone_charger, compound="left",
+        command=self.charger_et_actualiser, font=("Arial", 15, "bold"), height=52, width=290, corner_radius=10)
+        # placer le bouton
+        bouton_charger.pack(side="left", padx=8)
+
+        # image de "?" pour le bouton aide
+        self.icone_aide = ctk.CTkImage(light_image=Image.open(self.handler.resource_path("images/icone_aide.png")), size=(22, 22))
+
+        # bouton aide
+        bouton_aide = ctk.CTkButton(ligne_boutons, text="Aide", image=self.icone_aide, compound="left", command=lambda: self.afficher_page(self.page_aide),
+        fg_color="transparent", text_color="#1669B5", border_width=1, border_color="#CDD8E4", font=("Arial", 15), height=52, width=145, corner_radius=10)
+
+        # placer le bouton
+        bouton_aide.pack(side="left", padx=8)
+
+    def afficher_page(self, page):
+        # Mettre la page active dans la mémoire
+        self.page_active = page
+        pages = (
+            self.page_accueil,
+            self.page_graphiques,
+            self.page_aide,
+            self.page_pie,
+            self.page_barres
+        )
+
+        # Masquer les pages inactives
+        for p in pages:
+            if p == page:
+                p.grid()
+            else:
+                p.grid_remove()
+
+        # Afficher la page sélectionnée
+        page.tkraise()
+
+        # Changer la page actuelle et actualiser cette page.
+        self.page_actuelle = page
+        self.actualiser_page_active()
+
+        if page == self.page_accueil:
+            self.config(menu="")
+        else:
+            self.config(menu=self.menu_principal)
+
+    def actualiser_page_active(self):
+        self.handler.df_resultats = pd.DataFrame()
+        self.handler.graph_resultat = None
+
         if self.handler.df.empty:
             return
-        print(f"L'utilisateur a cliqué sur : {choix}")
-        #Dico d'équivalence pour les noms de colonnes du DataFrame
-        colonnes = {"Nombre de morts": "NB_MORTS","Nombre de blessés graves": "NB_BLESSES_GRAVES",
-        "Nombre de blessés légers": "NB_BLESSES_LEGERS","Nombre total de victimes": "NB_VICTIMES_TOTAL",
-        "Nombre de victimes piétons": "NB_VICTIMES_PIETON","Nombre de victimes moto": "NB_VICTIMES_MOTO",
-        "Nombre de victimes vélo": "NB_VICTIMES_VELO"}
 
-        # Créer serie avec les données souhaitée pour le graphique
-        if choix == "Nombre de collisions":
-            resultats = self.handler.df.groupby("AN").size()
-        else:
-            colonne = colonnes[choix]
-            resultats = self.handler.df.groupby("AN")[colonne].sum()
+        if self.page_actuelle == self.page_graphiques:
+            self.page_graphiques.graph.update_graph(
+                self.page_graphiques.selection.get(),
+                self.page_graphiques.texte_stats
+            )
 
-        # Garder les résultats pour en cas d'exportation
-        self.handler.df_resultats = resultats.reset_index(name=choix)
-        self.graph.create_graph(x=resultats.index, y=resultats.values, titre=choix + " par année", label_y=choix)
-        #Récupération de données pour statsbox
-        total = resultats.sum()
-        annee_record = resultats.idxmax()
-        maximum = resultats.max()
-        noms_mois = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
-        #Récupérer mois de chaque accident
-        mois = pd.to_datetime(self.handler.df["DT_ACCDN"], errors="coerce").dt.month
-        #Classer les accidents par leur mois
-        if choix == "Nombre de collisions":
-            resultats_mois = self.handler.df.groupby(mois).size()
-        else:
-            resultats_mois = self.handler.df.groupby(mois)[colonne].sum()
-        #Assigner meilleur mois
-        numero_mois = int(resultats_mois.idxmax())
-        mois_record = noms_mois[numero_mois - 1]
-        #Créer texte pour statsbox
-        texte = (f"Total : {int(total)}\n\n"
-        f"Année record : {int(annee_record)}\n\n"
-        f"Maximum annuel : {int(maximum)}\n\n"
-        f"Mois record : {mois_record}")
-        self.texte_stats.configure(text=texte)
+        elif self.page_actuelle == self.page_pie:
+            self.page_pie.pie_graph.update_pie(
+                self.page_pie.selection_annees.get(),
+                self.page_pie.texte_stats
+            )
+
+        elif self.page_actuelle == self.page_barres:
+            self.page_barres.barres_graphe.update_bar(
+                self.page_barres.selection_annees_bar.get(),
+                self.page_barres.selection_type.get(),
+                self.page_barres.texte_stats
+            )
+                
+    def charger_et_actualiser(self):
+        if self.handler.charger_csv():
+            self.page_graphiques.graph.update_graph(self.page_graphiques.selection.get(), self.page_graphiques.texte_stats)
+            self.page_pie.pie_graph.update_pie(self.page_pie.selection_annees.get(), self.page_pie.texte_stats)
+            self.page_barres.barres_graphe.update_bar(self.page_barres.selection_annees_bar.get(),self.page_barres.selection_type.get(),self.page_barres.texte_stats)
+
+        # Actualiser un autre fois pour assurer que les données viennent de la page courante.
+        self.actualiser_page_active()
         
     def create_menu(self):
-        menu = tk.Menu(self)
-        self.config(menu=menu)
-
+        self.menu_principal = tk.Menu(self)
+        menu = self.menu_principal
         menu.option_add("*Menu.font", "Arial 12")
 
+        #Accueil
+        menu.add_command(label="Accueil", command=lambda: self.afficher_page(self.page_accueil))
+
+        #Aide
+        menu.add_command(label="Aide", command=lambda: self.afficher_page(self.page_aide))
+
+        #File menu
         file_menu = tk.Menu(menu, tearoff=0)
         menu.add_cascade(label="Fichier", menu=file_menu)
-        file_menu.add_command(label="Sauvegarder", command=self.handler.sauvegarder_csv)
+        file_menu.add_command(label="Sauvegarder Données", command=self.handler.sauvegarder_donnees)
+        file_menu.add_command(label="Sauvegarder Graphique", command=self.handler.sauvegarder_graphique)
         file_menu.add_command(label="Charger", command=self.charger_et_actualiser)
-        #Variable pour mettre choix de graphique
-        self.selection = tk.StringVar(value="Nombre de collisions")
-        #Liste d'options
-        options = ["Nombre de collisions","Nombre de morts", "Nombre de blessés graves", "Nombre de blessés légers",
-                   "Nombre total de victimes", "Nombre de victimes piétons", "Nombre de victimes moto", "Nombre de victimes vélo"]
-        #Création menu déroulant
-        menuDeroulantGraphique = ctk.CTkOptionMenu(self, variable=self.selection, values = options, command = self.update_graph, font=("Arial", 13), corner_radius=8, height=36)
-        menuDeroulantGraphique.place(relx=0.025, rely=0.09, anchor="nw", relwidth=0.2)
-        #Création label menu déroulant
-        TitreMenuDeroulantGraphique = ctk.CTkLabel(self, text="Statistique à afficher",font=("Arial", 16, "bold"), text_color= "black", fg_color= "transparent")
-        TitreMenuDeroulantGraphique.place(relx=0.125, rely=0.05, anchor="center")
-        #Création statsbox
-        self.stats_frame = ctk.CTkFrame(self, fg_color="white", border_width=1, border_color="#D9DEE5", corner_radius=12)
-        self.stats_frame.place(relx=0.025, rely=0.32, anchor="nw", relwidth=0.20, relheight=0.27)
-        #Création label statsbox
-        self.titre_stats = ctk.CTkLabel(self.stats_frame, text="Résumé statistique", font=("Arial", 16, "bold"), text_color="black")
-        self.titre_stats.pack(pady=(12, 8))
-        #Création texte pour stats
-        self.texte_stats = ctk.CTkLabel(self.stats_frame, text="Chargez un fichier CSV.", font=("Arial", 13), text_color="black", justify="left", anchor="w")
-        self.texte_stats.pack(fill="x", padx=12, pady=8)
+
+        #Menu graphiques
+        graphiques_menu = tk.Menu(menu, tearoff=0)
+        menu.add_cascade(label="Graphiques", menu=graphiques_menu)
+
+        # Évolution annuelle
+        graphiques_menu.add_command(label="Évolution annuelle", command=lambda: self.afficher_page(self.page_graphiques))
+
+        # Pie graph
+        graphiques_menu.add_command(label="Graphique circulaire", command=lambda: self.afficher_page(self.page_pie))
+
+        # Graphique à barres
+        graphiques_menu.add_command(label="Graphique à barres", command=lambda: self.afficher_page(self.page_barres))
+
+        
 if __name__ == "__main__":
     ctk.set_appearance_mode("system")
     ctk.set_default_color_theme("blue")
