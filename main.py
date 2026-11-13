@@ -10,6 +10,7 @@ from pages.aide import Aide
 from pages.circulaire import Circulaire
 from pages.graphique import Graphique
 from pages.barres import Barres
+from pages.carte import Carte
 
 class MainApplication(ctk.CTk):
     def __init__(self):
@@ -32,6 +33,8 @@ class MainApplication(ctk.CTk):
         self.page_graphiques = Graphique(self, self.handler, fg_color="white")
         self.page_pie = Circulaire(self, self.handler, fg_color="white")
         self.page_barres = Barres(self, self.handler, fg_color="white")
+        self.page_carte = Carte(self, self.handler, fg_color="white")
+
 
         #Placer pages
         self.page_accueil.grid(row=0, column=0, sticky="nsew")
@@ -39,6 +42,7 @@ class MainApplication(ctk.CTk):
         self.page_aide.grid(row=0, column=0, sticky="nsew")
         self.page_pie.grid(row=0, column=0, sticky="nsew")
         self.page_barres.grid(row=0, column=0, sticky="nsew")
+        self.page_carte.grid(row=0, column=0, sticky="nsew")
 
         self.page_actuelle = self.page_accueil
 
@@ -234,6 +238,9 @@ class MainApplication(ctk.CTk):
 
         #Aide
         menu.add_command(label="Aide", command=lambda: self.afficher_page(self.page_aide))
+
+        #Map
+        menu.add_command(label="Carte", command=lambda: self.afficher_page(self.page_carte))
 
         #File menu
         file_menu = tk.Menu(menu, tearoff=0)
