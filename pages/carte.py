@@ -20,8 +20,9 @@ class Carte(ctk.CTkFrame):
         self.stats_frame = ctk.CTkFrame(self, fg_color="#EAF4FC", border_width=1, border_color="#B8D6EA", corner_radius=12)
         self.stats_frame.place(relx=0.0175, rely=0.08, anchor="nw", relwidth=0.20, relheight=0.57)
         #Créer et placer Boutton pour actualiser
-        self.bouton_actualiser = ctk.CTkButton(self,text="Actualiser la carte", compound="left", 
-        command=self.map.update_map, font=("Arial", 15, "bold"), height=52, width=290, corner_radius=10)
+        self.bouton_actualiser = ctk.CTkButton(self,text="Actualiser la carte", compound="left",
+        command=lambda: self.map.update_map(self.selection.get(), self.selection_gravite.get()),
+        font=("Arial", 15, "bold"), height=52, width=290, corner_radius=10)
         self.bouton_actualiser.place(relx=0.0175, rely=0.65, anchor="nw", relwidth=0.20, relheight=0.05)
 
         # Variable qui conserve l'année sélectionnée
