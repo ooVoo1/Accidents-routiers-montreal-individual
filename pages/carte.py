@@ -16,9 +16,9 @@ class Carte(ctk.CTkFrame):
         self.map = MapMaker(self,self.handler)
         self.map.place(relx=0.6, rely=0.4, anchor="center", relwidth=0.75, relheight=0.70)
 
-        # Encadré des statistiques
-        self.stats_frame = ctk.CTkFrame(self, fg_color="#EAF4FC", border_width=1, border_color="#B8D6EA", corner_radius=12)
-        self.stats_frame.place(relx=0.0175, rely=0.08, anchor="nw", relwidth=0.20, relheight=0.57)
+        #Encadré des dropdown menu
+        self.menu_frame = ctk.CTkFrame(self, fg_color="#EAF4FC", border_width=1, border_color="#B8D6EA", corner_radius=12)
+        self.menu_frame.place(relx=0.0175, rely=0.08, anchor="nw", relwidth=0.20, relheight=0.57)
         #Créer et placer Boutton pour actualiser
         self.bouton_actualiser = ctk.CTkButton(self,text="Actualiser la carte", compound="left",
         command=lambda: self.map.update_map(self.selection.get(), self.selection_gravite.get()),
@@ -28,19 +28,19 @@ class Carte(ctk.CTkFrame):
         # Variable qui conserve l'année sélectionnée
         self.selection = ctk.StringVar(value="Toutes les années")
         # Dropdown menu pour choisir l'année
-        self.menuDeroulantCarte = ctk.CTkOptionMenu(self.stats_frame, variable=self.selection, values=["Toutes les années"])
+        self.menuDeroulantCarte = ctk.CTkOptionMenu(self.menu_frame, variable=self.selection, values=["Toutes les années"])
         self.menuDeroulantCarte.place(relx=0.05, rely=0.12, anchor="nw", relwidth=0.90)
         #Label du dropdown menu
-        self.label_annee = ctk.CTkLabel(self.stats_frame, text="Année", font=("Arial", 14, "bold"), text_color="#24527A")
+        self.label_annee = ctk.CTkLabel(self.menu_frame, text="Année", font=("Arial", 14, "bold"), text_color="#24527A")
         self.label_annee.place(relx=0.05, rely=0.055, anchor="nw")
 
         # Variable qui conserve la gravité sélectionnée
         self.selection_gravite = ctk.StringVar(value="Toutes les gravités")
         # Menu déroulant des gravités
-        self.menu_gravite = ctk.CTkOptionMenu(self.stats_frame, variable=self.selection_gravite, values=["Toutes les gravités"])
+        self.menu_gravite = ctk.CTkOptionMenu(self.menu_frame, variable=self.selection_gravite, values=["Toutes les gravités"])
         self.menu_gravite.place(relx=0.05, rely=0.28, anchor="nw", relwidth=0.90)
         # Label du dropdown menu
-        self.label_gravite = ctk.CTkLabel(self.stats_frame, text="Gravité", font=("Arial", 14, "bold"), text_color="#24527A")
+        self.label_gravite = ctk.CTkLabel(self.menu_frame, text="Gravité", font=("Arial", 14, "bold"), text_color="#24527A")
         self.label_gravite.place(relx=0.05, rely=0.215, anchor="nw")
 
         # Bouton pour recentrer la carte
