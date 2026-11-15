@@ -29,13 +29,26 @@ class Carte(ctk.CTkFrame):
         # Dropdown menu pour choisir l'année
         self.menuDeroulantCarte = ctk.CTkOptionMenu(self.stats_frame, variable=self.selection, values=["Toutes les années"])
         self.menuDeroulantCarte.place(relx=0.05, rely=0.12, anchor="nw", relwidth=0.90)
+        #Label du dropdown menu
+        self.label_annee = ctk.CTkLabel(self.stats_frame, text="Année", font=("Arial", 14, "bold"), text_color="#24527A")
+        self.label_annee.place(relx=0.05, rely=0.055, anchor="nw")
+
+        # Variable qui conserve la gravité sélectionnée
+        self.selection_gravite = ctk.StringVar(value="Toutes les gravités")
+        # Menu déroulant des gravités
+        self.menu_gravite = ctk.CTkOptionMenu(self.stats_frame, variable=self.selection_gravite, values=["Toutes les gravités"])
+        self.menu_gravite.place(relx=0.05, rely=0.28, anchor="nw", relwidth=0.90)
+        # Label du dropdown menu
+        self.label_gravite = ctk.CTkLabel(self.stats_frame, text="Gravité", font=("Arial", 14, "bold"), text_color="#24527A")
+        self.label_gravite.place(relx=0.05, rely=0.215, anchor="nw")
 
         # Bouton pour recentrer la carte
         self.bouton_recentrer = ctk.CTkButton(self, text="Recentrer sur Montréal", command=self.map.recentrer_montreal, width=190, height=38, corner_radius=8)
         self.bouton_recentrer.place(relx=0.96, rely=0.07, anchor="ne")
 
-        # Remplir le dropdown menu des années si des données sont déjà disponibles
+        # Remplir les dropdown menu si des données sont déjà disponibles
         self.actualiser_annee()
+        self.actualiser_gravite()
 
     def actualiser_annee(self):
         # Vérifier si la colonne "AN" existe ou si nous n'avons pas de dataframe
@@ -53,4 +66,15 @@ class Carte(ctk.CTkFrame):
         if self.selection.get() not in options_annees:
             self.selection.set("Toutes les années")
 
-        
+    def actualiser_gravite(self):
+        # Vérifier si la colonne "GRAVITE" existe ou si nous n'avons pas de dataframe
+        if self.handler.df is None or "GRAVITE" not in self.handler.df.columns:
+            return
+        # Récupérer les gravités dans le data frame et mettre dans une liste en string direct
+        gravites = sorted(self.handler.df["GRAVITE"].dropna().astype(str).unique().tolist())
+        #Ajouter l'option générale
+        options_gravite = ["Toutes les gravités"] + gravites
+        self.menu_gravite.configure(values=options_gravite)
+        #Vérifier la sélection comme plus haut
+        if self.selection_gravite.get() not in options_gravite:
+            self.selection_gravite.set("Toutes les gravités")
