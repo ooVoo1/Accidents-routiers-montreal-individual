@@ -94,16 +94,17 @@ class MainApplication(ctk.CTk):
         conteneur.grid(row=2, column=0, sticky="nsew", padx=50, pady=10)
         conteneur.grid_rowconfigure(0, weight=1)
 
-        for i in range(3):
+        for i in range(4):
             conteneur.grid_columnconfigure(i, weight=1, uniform="cartes")
 
         #Liste de tuples avec le contenu des boutons
         pages = [("Évolution annuelle", "Visualiser l'évolution des collisions au fil des années.", self.page_graphiques),
         ("Graphique circulaire", "Analyser la répartition des collisions selon leur gravité.", self.page_pie),
-        ("Graphique à barres", "Comparer différentes catégories de collisions.", self.page_barres)]
+        ("Graphique à barres", "Comparer différentes catégories de collisions.", self.page_barres),
+        ("Carte interactive", "Explorer la répartition géographique des collisions à Montréal.", self.page_carte)]
 
         #Mettre les icones des 3 gros boutons dans une variable
-        icones = ["icone_evolution.png", "icone_circulaire.png", "icone_barres.png"]
+        icones = ["icone_evolution.png", "icone_circulaire.png", "icone_barres.png", "icone_carte.png"]
 
         #Pour garder les icones en mémoire
         self.icones_accueil = []
@@ -135,7 +136,7 @@ class MainApplication(ctk.CTk):
             # Rendre bouton clickable (parceque pour l'instant ce n'était qu'un carré avec du texte et une image)
             for widget in (gros_bouton, contenu, image_gros_bouton, titre_gros_bouton, texte_gros_bouton):
                 widget.bind("<Button-1>", lambda event, p=page: self.afficher_page(p))
-
+            
         # place des boutons aide et charger (AC)
         place_boutons_AC = ctk.CTkFrame(self.page_accueil,fg_color="transparent")
         place_boutons_AC.grid(row=3, column=0, sticky="nsew")
@@ -171,7 +172,8 @@ class MainApplication(ctk.CTk):
             self.page_graphiques,
             self.page_aide,
             self.page_pie,
-            self.page_barres
+            self.page_barres,
+            self.page_carte
         )
 
         # Masquer les pages inactives
