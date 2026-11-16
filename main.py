@@ -17,9 +17,10 @@ class MainApplication(ctk.CTk):
         super().__init__()
         self.title("RouteSûre")
         self.configure(fg_color="white")
-        self.geometry("1240x768")
+        self.geometry("1280x720")
         self.handler = DataHandler()
-
+        #Chargement automatique du CSV pour les tests
+        self.handler.df = pd.read_csv(self.handler.resource_path("collisions_routieres.csv"))
         #Créer le menu
         self.create_menu()
 
@@ -49,6 +50,8 @@ class MainApplication(ctk.CTk):
         #Création page accueil
         self.creer_accueil()
         self.afficher_page(self.page_accueil)
+        #Pour que l'application s'ouvre comme du monde bordel
+        self.after(0, lambda: self.state("zoomed"))
 
     def creer_accueil(self):
         # Pour que l'accueil s'adapte à la taille de la fenêtre
