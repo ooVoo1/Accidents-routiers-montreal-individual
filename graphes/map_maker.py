@@ -150,11 +150,11 @@ class MapMaker(ctk.CTkFrame):
         dessin.text((centre, centre), str(nombre), font=police, fill="black", anchor="mm")
 
         return ImageTk.PhotoImage(image)
-
+    #Fonction qui décide du pas approprié en fonction du zoom actuel (pas plus petit = plus de cases donc plus de points)
     def pas_pour_zoom(self):
         zoom = round(self.carte.zoom)
         if zoom <= 11:
-            return 0.03
+            return 0.033
         elif zoom == 12:
             return 0.02
         elif zoom == 13:
