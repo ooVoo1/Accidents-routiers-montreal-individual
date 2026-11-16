@@ -11,6 +11,9 @@ from pages.circulaire import Circulaire
 from pages.graphique import Graphique
 from pages.barres import Barres
 from pages.carte import Carte
+#Pour le logo
+import ctypes
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("RouteSure.Application")
 
 class MainApplication(ctk.CTk):
     def __init__(self):
@@ -21,6 +24,8 @@ class MainApplication(ctk.CTk):
         self.handler = DataHandler()
         #Chargement automatique du CSV pour les tests
         self.handler.df = pd.read_csv(self.handler.resource_path("collisions_routieres.csv"))
+        #Logo de l'application
+        self.iconbitmap(self.handler.resource_path("images/logo_routesure2.ico"))
         #Créer le menu
         self.create_menu()
 
@@ -230,8 +235,7 @@ class MainApplication(ctk.CTk):
             self.page_pie.pie_graph.update_pie(self.page_pie.selection_annees.get(), self.page_pie.texte_stats)
             self.page_barres.barres_graphe.update_bar(self.page_barres.selection_annees_bar.get(),self.page_barres.selection_type.get(),self.page_barres.texte_stats)
         #Actualiser les dropdown menu pour la carte
-        self.page_carte.actualiser_annee()
-        self.page_carte.actualiser_gravite()
+        self.page_carte.actualiser_dropdowns()
         # Actualiser une autre fois pour s'assurer que les données viennent de la page courante.
         self.actualiser_page_active()
         

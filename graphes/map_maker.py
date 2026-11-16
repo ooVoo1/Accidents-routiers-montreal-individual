@@ -29,7 +29,7 @@ class MapMaker(ctk.CTkFrame):
         #Surveiller pour un changement de zoom
         self.after(400, self.surveiller_zoom)
 
-    def update_map(self, annee="Toutes les années", gravite="Toutes les gravités"):
+    def update_map(self, annee="Toutes les années", gravite="Toutes les gravités", colonne_victime=None, colonne_vehicule=None):
         #Enlever les possibles points sur la carte
         self.carte.delete_all_marker()
         #Enlève les anciennes images de la mémoire
@@ -55,9 +55,19 @@ class MapMaker(ctk.CTkFrame):
         if gravite != "Toutes les gravités":
             donnees = donnees[donnees["GRAVITE"].astype(str) == gravite]
 
+        #Filtrer pour le type de victime choisie(on transforme les valeurs en chiffre pour comparer avec 0/ .fillna(0) sert à remplacer 
+        #les NaN mis par coerce par des 0)
+        if colonne_victime is not None:
+            donnees = donnees[pd.to_numeric(donnees[colonne_victime], errors="coerce").fillna(0) > 0]
+
+        #Filtrer pour le type de véhicule choisi (voir explication ci-dessus)
+        if colonne_vehicule is not None:
+            donnees = donnees[pd.to_numeric(donnees[colonne_vehicule], errors="coerce").fillna(0) > 0]
+
         #Faire une copie des deux colonnes qui nous intéressent pour pouvoir les convertir en valeurs numériques sans modifier le dataframe de base
         donnees = donnees[["LOC_LAT", "LOC_LONG"]].copy()
-
+        print("Filtres reçus :", annee, gravite, colonne_victime, colonne_vehicule)
+        print("Collisions après filtrage :", len(donnees))
         #Convertir les coordonnées en nombres et transformer en NaN les collisions avec une position inconnue pour pouvoir faire dropna après
         donnees["LOC_LAT"] = pd.to_numeric(donnees["LOC_LAT"], errors="coerce")
         donnees["LOC_LONG"] = pd.to_numeric(donnees["LOC_LONG"], errors="coerce")
@@ -72,7 +82,7 @@ class MapMaker(ctk.CTkFrame):
             messagebox.showinfo("Aucun résultat", "Aucune collision à afficher pour ces filtres.")
             return
         #Garder les filtres actuels pour les réutiliser après avoir utilisé le zoom
-        self.filtres_actuels = (annee, gravite)
+        self.filtres_actuels = (annee, gravite, colonne_victime, colonne_vehicule)
 
         #Définir la taille des zones selon le zoom actuel (plus le pas est petit plus il y a de zones) si le zoom est assez grand,
         #on régle le pas sur None parcqu'on veut voir les collision de façon individuelle (voir fonction plus bas).
@@ -97,7 +107,7 @@ class MapMaker(ctk.CTkFrame):
             icone = self.creer_icone_groupe(groupe.nombre)
             self.icones_groupes.append(icone)
             self.carte.set_marker(groupe.latitude, groupe.longitude, icon=icone, icon_anchor="center")
-
+        
         print(f"{total} collisions représentées dans {len(groupes)} regroupements.")
 
     def creer_icone_groupe(self, nombre):
@@ -184,8 +194,8 @@ class MapMaker(ctk.CTkFrame):
             #Actualiser seulement si la carte à déjà été chargée
             if self.filtres_actuels is not None:
                 #Décomposer tuple pour actualiser la carte
-                annee, gravite = self.filtres_actuels
-                self.update_map(annee, gravite)
+                annee, gravite, colonne_victime, colonne_vehicule = self.filtres_actuels
+                self.update_map(annee, gravite, colonne_victime, colonne_vehicule)
 
         #Continuer de surveiller
         self.after(400, self.surveiller_zoom)
