@@ -65,7 +65,7 @@ class MainApplication(ctk.CTk):
         self.page_accueil.grid_rowconfigure(2, weight=3)
         self.page_accueil.grid_rowconfigure(3, weight=1)
 
-        # Place pour le logo RouteSure
+        # Place pour le logo RouteSure  
         place_logo = ctk.CTkFrame(self.page_accueil,fg_color="transparent")
         place_logo.grid(row=0, column=0, sticky="nsew")
 

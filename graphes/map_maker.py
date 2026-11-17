@@ -64,17 +64,24 @@ class MapMaker(ctk.CTkFrame):
         if colonne_vehicule is not None:
             donnees = donnees[pd.to_numeric(donnees[colonne_vehicule], errors="coerce").fillna(0) > 0]
 
+        #Mettre à jour les statistiques en bas de l'écran (.master pour faire appel à une fonction de carte.py
+        #qui gére l'affichage et donc, par extension l'affichage des statistiques)
+        self.master.mettre_a_jour_stats(donnees)
+
         #Faire une copie des deux colonnes qui nous intéressent pour pouvoir les convertir en valeurs numériques sans modifier le dataframe de base
         donnees = donnees[["LOC_LAT", "LOC_LONG"]].copy()
         print("Filtres reçus :", annee, gravite, colonne_victime, colonne_vehicule)
         print("Collisions après filtrage :", len(donnees))
-        #Convertir les coordonnées en nombres et transformer en NaN les collisions avec une position inconnue pour pouvoir faire dropna après
+        #Convertir les coordonnées en nombres et transformer en NaN les collisions avec une position inconnue pour pouvoir faire .dropna() après
         donnees["LOC_LAT"] = pd.to_numeric(donnees["LOC_LAT"], errors="coerce")
         donnees["LOC_LONG"] = pd.to_numeric(donnees["LOC_LONG"], errors="coerce")
 
         #Retirer les coordonnées manquantes ou invalides (Genre pas sur la terre)
         donnees = donnees.dropna(subset=["LOC_LAT", "LOC_LONG"])
         donnees = donnees[donnees["LOC_LAT"].between(-90, 90) & donnees["LOC_LONG"].between(-180, 180)]
+
+        #Garder les collisions filtrées et géolocalisées pour les statistiques
+        self.donnees_filtrees_geo = donnees
         #Nombre de coordonnées
         total = len(donnees)
         #Message d'erreur si il n'y a pas de collision à afficher
@@ -91,6 +98,8 @@ class MapMaker(ctk.CTkFrame):
         if pas is None:
             self.afficher_points(donnees= donnees)
             return
+        #Mettre à jour la statistique du nombre de collisions visibles
+        self.actualiser_nombre_visible()
         #Ici, on créée deux nouvelles colonnes au dataframe qui vont contenir la "zone" horizontale et verticale
         #à laquelle chaque collision appartient on fait une division entière à plancher pour enlever les décimales
         #et après on fait .astype(int) pour enlever le .0 dans XXXX.0 parceque ça n'a aucun rapport de numéroter avec des décimales
@@ -182,21 +191,25 @@ class MapMaker(ctk.CTkFrame):
         nouveau_pas = self.pas_pour_zoom()
         #Déterminer la position actuelle de la carte
         position_actuelle = self.carte.get_position()
-        #Condition qui regarde si nous sommes bien assez zoomé pour l'affichage individuel puis qui regarde aussi
-        #si le centre de la zone affichée a changé
-        position_changee = nouveau_pas is None and position_actuelle != self.derniere_position
+        #Condition qui vérifie si la carte a été déplacée
+        position_changee = position_actuelle != self.derniere_position
 
-        #Vérifier si on as changé le zoom ou si on as bougé l'affichage; Si c'est le cas mettre nos variables à jour
-        if nouveau_pas != self.dernier_pas or position_changee:
+        #Vérifier si on as changé le zoom ou si le zoom actuel est None (donc affichage de points individuels) et que la position a changé
+        #Si c'est le cas mettre nos variables à jour
+        if nouveau_pas != self.dernier_pas or (nouveau_pas is None and position_changee):
             self.dernier_pas = nouveau_pas
             self.derniere_position = position_actuelle
-
             #Actualiser seulement si la carte à déjà été chargée
             if self.filtres_actuels is not None:
                 #Décomposer tuple pour actualiser la carte
                 annee, gravite, colonne_victime, colonne_vehicule = self.filtres_actuels
                 self.update_map(annee, gravite, colonne_victime, colonne_vehicule)
-
+        #Si il y a seulement la position qui à été changée et que le zoom n'est pas assez haut pour afficher les points individuels
+        #alors on actualise seulement la statistique du nombre de collisions affichées (juste si il y a des collisions d'affichée)
+        elif position_changee:
+            self.derniere_position = position_actuelle
+            if self.filtres_actuels is not None:
+                self.actualiser_nombre_visible()
         #Continuer de surveiller
         self.after(400, self.surveiller_zoom)
 
@@ -221,9 +234,42 @@ class MapMaker(ctk.CTkFrame):
         #Afficher les collisions sous forme de petits points rouge
         for latitude, longitude in visibles.itertuples(index=False, name=None):
             self.carte.set_marker(latitude, longitude, icon=self.marqueur_collision, icon_anchor="center")
-        print(f"{len(visibles)} collisions individuelles affichées.")
+        #Mettre à jour la statistique du nombre de collisions affichée avec le vrai nombre de collisions qu'on affiche (1500 au maximum)
+        self.master.label_valeur_geolocalisees.configure(text=f"{len(visibles):,}".replace(",", " "))
 
-        
+    #Nouvelle version de recentrer_montreal pour optimiser la performance
     def recentrer_montreal(self):
-        self.carte.set_position(45.54, -73.5673)
+        #On supprime les anciens points/regroupements avant de déplacer la carte comme ça l'application
+        #ne les repositionne pas tous après avoir dézoomé avant de les enlever (c'était super long)
+        self.carte.delete_all_marker()
+        self.icones_groupes = []
+
+        #Revenir au zoom et à la position initiale
         self.carte.set_zoom(11)
+        self.carte.set_position(45.54, -73.5673)
+
+        #On mets à jour les variables que l'on surveille pour éviter d'actualiser 2 fois
+        self.dernier_pas = self.pas_pour_zoom()
+        self.derniere_position = self.carte.get_position()
+
+        #Recréer les regroupements de collisions avec les filtres actuels
+        if self.filtres_actuels is not None:
+            annee, gravite, colonne_victime, colonne_vehicule = self.filtres_actuels
+            self.update_map(annee, gravite, colonne_victime, colonne_vehicule)
+
+    def actualiser_nombre_visible(self):
+        #Récupérer la taille de la carte
+        largeur = self.carte.canvas.winfo_width()
+        hauteur = self.carte.canvas.winfo_height()
+
+        #Convertir les deux coins (Haut-gauche et bas-droite) de la section visible de la carte en coordonnées
+        nord, ouest = self.carte.convert_canvas_coords_to_decimal_coords(0, 0)
+        sud, est = self.carte.convert_canvas_coords_to_decimal_coords(largeur, hauteur)
+
+        #Garder les collisions comprises dans cette zone (donnees_filtrees_geo défini dans update_map pour cette utilisation)
+        donnees = self.donnees_filtrees_geo
+        visibles = donnees[donnees["LOC_LAT"].between(sud, nord) & donnees["LOC_LONG"].between(ouest, est)]
+
+        #Finalement, afficher dans les statistiques le nombre de collisions visible
+        nombre = len(visibles)
+        self.master.label_valeur_geolocalisees.configure(text=f"{nombre:,}".replace(",", " "))

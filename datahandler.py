@@ -1,4 +1,5 @@
 import pandas as pd
+import geopandas as gpd
 
 from tkinter import filedialog, messagebox
 
