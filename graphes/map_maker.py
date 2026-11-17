@@ -1,8 +1,8 @@
 import customtkinter as ctk
 import pandas as pd
-from tkinter import messagebox
+from tkinter import messagebox ,filedialog
 from tkintermapview import TkinterMapView
-from PIL import Image, ImageDraw, ImageTk, ImageFont
+from PIL import Image, ImageDraw, ImageTk, ImageFont, ImageGrab
 
 class MapMaker(ctk.CTkFrame):
     def __init__(self, master, handler):
@@ -287,3 +287,76 @@ class MapMaker(ctk.CTkFrame):
         #Finalement, afficher dans les statistiques le nombre de collisions visible
         nombre = len(visibles)
         self.master.label_valeur_geolocalisees.configure(text=f"{nombre:,}".replace(",", " "))
+    
+    #Fonction qui sauvegarde la portion de la carte actuellement visible
+    def sauvegarder_carte(self):
+        #".winfo_ismapped()" vérifie si un widget est actuellement visible à l'écran (dans notre cas la carte) et affiche 
+        #un message d'erreur si ce n'est pas la cas, parceque l'export fonctionne avec une capture d'écran donc si la carte
+        #n'est pas visible, on vas capturer... ben pas la carte
+        if not self.carte.winfo_ismapped():
+            messagebox.showwarning("Carte non visible", "Veuillez afficher la page Carte avant de l'exporter.")
+            return
+
+        #Exécute toutes les opérations en attente sur la carte (sinon si tu capture juste après avoir actualisé la carte et que
+        #les points n'ont pas fini de loader tu capture la carte sans tout les points)
+        self.carte.update_idletasks()
+
+        #Récupérer la position du coin haut-gauche de la carte
+        gauche = self.carte.winfo_rootx()
+        haut = self.carte.winfo_rooty()
+
+        #Calculer la position du coin bas-droite de la carte
+        droite = gauche + self.carte.winfo_width()
+        bas = haut + self.carte.winfo_height()
+
+        try:
+            #Prendre un screenshot de la carte à l'aide des coordonnées déterminées plus haut
+            capture = ImageGrab.grab(bbox=(gauche, haut, droite, bas))
+
+
+            #Créer une liste avec ce qu'on veut ajouter sur la capture de la carte
+            filtres = ["Filtres actuels",
+                f"Année : {self.master.selection.get()}",ss
+                f"Gravité : {self.master.selection_gravite.get()}",
+                f"Type de victime : {self.master.selection_victime.get()}",
+                f"Véhicule impliqué : {self.master.selection_vehicule.get()}"]
+
+            #Créer un objet qui vas nous permettre d'écrire sur le screenshot
+            dessin = ImageDraw.Draw(capture, "RGBA")
+
+            #Choisir l'écriture à utiliser avec gestion d'erreur possible pour l'exécutable
+            try:
+                police = ImageFont.truetype("arial.ttf", 17)
+            except OSError:
+                police = ImageFont.load_default()
+
+            #On trouve quelle taille doit faire l'encadré pour notre plus longue ligne de texte
+            largeur_texte = max(dessin.textbbox((0, 0), ligne, font=police)[2] for ligne in filtres)
+
+            largeur_bloc = largeur_texte + 35
+            hauteur_bloc = len(filtres) * 25 + 20
+
+            #Placer notre encadré d'écriture en bas à gauche de l'écran
+            x = 15
+            y = capture.height - hauteur_bloc - 15
+
+            #Dessiner le fameux encadré (parceque pour l'instant on a décidé la taille et placé "rien")
+            dessin.rounded_rectangle((x, y, x + largeur_bloc, y + hauteur_bloc), radius=10, fill=(255, 255, 255, 225))
+
+            #Écrire notre texte déterminé plus haut dans notre encadré
+            for i, ligne in enumerate(filtres):
+                dessin.text((x + 15, y + 10 + i * 25), ligne, font=police, fill="#183F65")
+
+
+            #Demander ou et sous quel nom enregistrer l'image
+            chemin = filedialog.asksaveasfilename(title="Sauvegarder la carte", defaultextension=".png",
+                filetypes=[("Images PNG", "*.png")], initialfile="carte_routesure.png")
+
+            #Pour si l'utilisateur annule avant d'enregistrer
+            if not chemin:
+                return
+            #Finalement, enregistrer la screen de la carte
+            capture.save(chemin, "PNG")
+
+        except Exception as erreur:
+            messagebox.showerror("Erreur d'exportation", str(erreur))

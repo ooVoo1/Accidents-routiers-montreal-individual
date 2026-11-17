@@ -256,9 +256,10 @@ class MainApplication(ctk.CTk):
         #File menu
         file_menu = tk.Menu(menu, tearoff=0)
         menu.add_cascade(label="Fichier", menu=file_menu)
-        file_menu.add_command(label="Sauvegarder Données", command=self.handler.sauvegarder_donnees)
-        file_menu.add_command(label="Sauvegarder Graphique", command=self.handler.sauvegarder_graphique)
+        file_menu.add_command(label="Sauvegarder données", command=self.handler.sauvegarder_donnees)
+        file_menu.add_command(label="Sauvegarder graphique", command=self.handler.sauvegarder_graphique)
         file_menu.add_command(label="Charger", command=self.charger_et_actualiser)
+        file_menu.add_command(label="Sauvegarder carte", command=lambda: self.page_carte.map.sauvegarder_carte())
 
         #Menu graphiques
         graphiques_menu = tk.Menu(menu, tearoff=0)
