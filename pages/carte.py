@@ -228,5 +228,20 @@ class Carte(ctk.CTkFrame):
             #Si le CSV est invalide (ne contient pas la colonne nécessaire)
             self.label_valeur_gravite.configure(text="—")
         
-        # Cette statistique sera ajoutée avec le GeoJSON
-        self.label_valeur_secteur.configure(text="—")
+        #Statistique sur le secteur le plus touché par les collisions dans les filtres actuels (Secteur le plus touché)
+        if "SECTEUR" in donnees.columns and not donnees["SECTEUR"].dropna().empty:
+            #".value_counts()" compte le nombre d'occurence par secteur et trie les secteurs de celui avec le plus de collisions
+            #jusqu'à celui qui en a le moins
+            classement = donnees["SECTEUR"].value_counts()
+
+            #Récupérer le secteur le plus fréquent et son nombre de collisions
+            secteur_max = classement.index[0]
+            nombre_max = classement.iloc[0]
+
+            #Finalement, changer le label pour afficher la magnifique statistique
+            texte = f"{secteur_max} ({nombre_max:,})".replace(",", " ")
+            self.label_valeur_secteur.configure(text=texte, font=("Arial", 13, "bold"))
+        else:
+            #Si le CSV est invalide (ne contient pas la colonne nécessaire)
+            self.label_valeur_secteur.configure(text="—")
+

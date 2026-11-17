@@ -40,6 +40,15 @@ class MapMaker(ctk.CTkFrame):
             messagebox.showwarning("Aucune donnée", "Veuillez charger un fichier CSV.")
             return
         df = self.handler.df
+
+        #Associer chaque collision à son secteur si ça n'a pas déjà été fait.
+        if "SECTEUR" not in df.columns:
+            try:
+                self.handler.associer_secteurs()
+            except Exception as erreur:
+                messagebox.showerror("Erreur GeoJSON", str(erreur))
+                return
+            
         #Vérifier que les colonnes obligatoires existent
         colonnes = ["AN", "GRAVITE", "LOC_LAT", "LOC_LONG"]
         if not all(colonne in df.columns for colonne in colonnes):
@@ -86,13 +95,18 @@ class MapMaker(ctk.CTkFrame):
         total = len(donnees)
         #Message d'erreur si il n'y a pas de collision à afficher
         if total == 0:
+            #Actualiser les filtres pour que les statistiques n'affichent pas des faussetée et que des collisions qui n'ont 
+            #pas raison d'être réapparaissent après avoir zoomé
+            self.filtres_actuels = None
+            # Réinitialiser le compteur des collisions affichées sinon il ne s'actualise pas tout seul
+            self.master.label_valeur_geolocalisees.configure(text="0")
             messagebox.showinfo("Aucun résultat", "Aucune collision à afficher pour ces filtres.")
             return
         #Garder les filtres actuels pour les réutiliser après avoir utilisé le zoom
         self.filtres_actuels = (annee, gravite, colonne_victime, colonne_vehicule)
 
         #Définir la taille des zones selon le zoom actuel (plus le pas est petit plus il y a de zones) si le zoom est assez grand,
-        #on régle le pas sur None parcqu'on veut voir les collision de façon individuelle (voir fonction plus bas).
+        #on régle le pas sur None parcequ'on veut voir les collision de façon individuelle (voir fonction plus bas).
         pas = self.pas_pour_zoom()
         # Si le zoom est assez élevé, afficher les collisions individuelles
         if pas is None:

@@ -132,3 +132,56 @@ class DataHandler():
             # Exécution normale du script Python
             base_path = os.path.dirname(os.path.abspath(__file__))
         return os.path.join(base_path, relative_path)
+
+
+    def associer_secteurs(self):
+        #Charger le GEOJson contenant les limites administratives de l'île de montréal
+        secteurs = gpd.read_file(self.resource_path("arrondissements_montreal.geojson"))
+
+        #Vérifier que le fichier contient la colonne "NOM" parceque si nous n'avons pas le nom des arrondissements, tout ça sert à rien
+        if "NOM" not in secteurs.columns:
+            raise ValueError("La colonne NOM est absente du GeoJSON.")
+
+        #Convertir les coordonnées de toutes les collisions en nombres
+        latitudes = pd.to_numeric(self.df["LOC_LAT"], errors="coerce")
+        longitudes = pd.to_numeric(self.df["LOC_LONG"], errors="coerce")
+
+        #Juste garder les collisions avec des coordonnées possibles
+        valides = latitudes.between(-90, 90) & longitudes.between(-180, 180)
+
+        #Crée une nouvelle colonne dans le dataframe pour assigner les secteurs et remplis cette colonne de NA
+        #pour dire qu'aucun secteur n'a été assigné encore
+        self.df["SECTEUR"] = pd.NA
+        
+        #Arrêter l'exécution de la fonction si il n'y a aucune collision avec des coordonnées possibles
+        if not valides.any():
+            return
+
+        #Mettre les coordonnées sous un format que geopandas peut utiliser
+        #On crée un "dataframe géographique" (.GeoDataFrame), sa principale caractéristique est le fait qu'il peut contenir
+        #une colonne "geometry" qui contient des objets du type géométriques (points, lignes ou polygones)
+        #"index=" détermine quels indices on veut donner aux lignes de notre 
+        #nouveau dataframe géographique, dans ce cas on prend seulement les indices "valides" parceque on veut remettre les secteurs
+        #trouvés dans notre dataframe normal plus tard. "geometry=" cet argument fournit la colonne "géométrique" du GeoDataFrame
+        #(dans notre cas des points) .points_from_xy est utilisé car nous avons des valeurs de longitude et de latitude associée 
+        #exactement comme des valeurs de x et y dans un plan cartésien. "crs=" veut dire Coordinate Reference System, on l'utilise 
+        #pour indiquer nos données sont sous quel format le code "EPSG:4326" correspond à WGS 84 le format sous lequel mon GEOJson est.
+        points = gpd.GeoDataFrame(index=self.df.index[valides], geometry=gpd.points_from_xy(longitudes[valides], latitudes[valides]), crs="EPSG:4326")
+
+        #Seulement garder les deux colonnes dont a de besoin pour la suite (le nom des secteurs et le polygone qui les 
+        #représente dans "geometry") et convertir en "EPSG:4326" (on doit être utiliser le même système partout)
+        secteurs = secteurs[["NOM", "geometry"]].to_crs("EPSG:4326")
+
+        #Jointure spatiale (qui donne le dataframe final) entre points et secteurs, c'est plutôt compliqué mais en gros ça
+        #associe chaque point au secteur auquel il appartient. "how="left"" indique qu'on veut garder toutes les lignes 
+        #du dataframe de gauche, en l'occurence "points". Ceci signifie qu'on garde tout les points même ceux qui ne sont pas 
+        # associés à un secteur.  "predicate="within"" est la condition géométrique: on demande à geopandas de trouver pour 
+        #chaque collision le polygone (l'arrondissement) auquel elle appartient. 
+        resultats = gpd.sjoin(points, secteurs, how="left", predicate="within")
+
+        #Garde un seul secteur pour chaque collision (la jointure spatiale est sujette à créer ce genre de problème)
+        #"groupby(level=0)" groupe ensemble toutes les lignes qui ont le même indice et ".first" ne garde que la première
+        noms_secteurs = resultats["NOM"].groupby(level=0).first()
+
+        #Mettre les secteurs dans notre dataframe original qui est utilisé partout.
+        self.df.loc[noms_secteurs.index, "SECTEUR"] = noms_secteurs
