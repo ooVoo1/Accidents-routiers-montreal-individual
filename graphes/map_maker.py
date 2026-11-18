@@ -2,6 +2,7 @@ import customtkinter as ctk
 import pandas as pd
 from tkinter import messagebox ,filedialog
 from tkintermapview import TkinterMapView
+from shapely.geometry import Point
 from PIL import Image, ImageDraw, ImageTk, ImageFont, ImageGrab
 
 class MapMaker(ctk.CTkFrame):
@@ -11,6 +12,7 @@ class MapMaker(ctk.CTkFrame):
         #Créer la carte
         self.carte = TkinterMapView(self, corner_radius=0)
         self.carte.pack(fill="both", expand=True)
+        self.carte.canvas.bind("<Double-Button-1>", self.double_clic_secteur, add="+") #Commande pour que la carte réagisse aux doubles clics
         #Créer image de 10x10 pixel full transparente
         image_point = Image.new("RGBA", (10, 10), (0, 0, 0, 0))
         #Dessiner le point rouge sur notre image transparente
@@ -316,7 +318,7 @@ class MapMaker(ctk.CTkFrame):
 
             #Créer une liste avec ce qu'on veut ajouter sur la capture de la carte
             filtres = ["Filtres actuels",
-                f"Année : {self.master.selection.get()}",ss
+                f"Année : {self.master.selection.get()}",
                 f"Gravité : {self.master.selection_gravite.get()}",
                 f"Type de victime : {self.master.selection_victime.get()}",
                 f"Véhicule impliqué : {self.master.selection_vehicule.get()}"]
@@ -360,3 +362,42 @@ class MapMaker(ctk.CTkFrame):
 
         except Exception as erreur:
             messagebox.showerror("Erreur d'exportation", str(erreur))
+
+    
+    def selectionner_secteur(self, coordonnees):
+        #Charger les arrrondissements si ce n'est pas déjà fait
+        if self.handler.secteurs is None:
+            try:
+                self.handler.charger_secteurs()
+            except Exception as erreur:
+                messagebox.showerror("Erreur GeoJSON", str(erreur))
+                return
+
+
+        #Récupérer les coordonnées du clic de la souris
+        latitude, longitude = coordonnees
+
+        #Transformer les coordonnées du clic de souris en objet géométrique utilisable pour Shapely (la bibliothèque sur laquelle geopandas est construite)
+        point = Point(longitude, latitude)
+
+        #Trouver les secteurs qui correspondent à notre clic (si on clique sur une frontière il peut en avoir plusieurs)
+        secteurs = self.handler.secteurs
+        correspondances = secteurs[secteurs.geometry.covers(point)]
+
+        #Vérifier si le clic peut être associé à au moins un secteur, si non arrêter l'exécution de la fonction.
+        if correspondances.empty:
+            print("Aucun secteur trouvé à cet emplacement.")
+            return
+
+        #Récupérer le nom du secteur sélectionné
+        secteur = correspondances.iloc[0]["NOM"]
+
+        print("Secteur sélectionné :", secteur)
+
+    #Fonction qui convertit l'objet "event" de Tkinter en coordonnées que selectionner_secteur() peut utiliser
+    def double_clic_secteur(self, event):
+        #Convertir la position du double-clic en coordonnées géographiques
+        coordonnees = self.carte.convert_canvas_coords_to_decimal_coords(event.x, event.y)
+
+        #Appeler notre fonction existante pour identifier le secteur
+        self.selectionner_secteur(coordonnees)

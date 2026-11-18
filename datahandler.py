@@ -13,6 +13,7 @@ class DataHandler():
         self.df = pd.DataFrame() # DataFrame initialement vide.
         self.df_resultats = pd.DataFrame() # Dataframe pour l'exportation des données
         self.graph_resultat = None # Graphique pour l'exportation des données
+        self.secteurs = None #Variable pour garder les secteurs en mémoire pour la carte cliquable
 
     def charger_csv(self):
         """Charger les données."""
@@ -135,12 +136,9 @@ class DataHandler():
 
 
     def associer_secteurs(self):
-        #Charger le GEOJson contenant les limites administratives de l'île de montréal
-        secteurs = gpd.read_file(self.resource_path("arrondissements_montreal.geojson"))
-
-        #Vérifier que le fichier contient la colonne "NOM" parceque si nous n'avons pas le nom des arrondissements, tout ça sert à rien
-        if "NOM" not in secteurs.columns:
-            raise ValueError("La colonne NOM est absente du GeoJSON.")
+        #Charger le GEOJson si ce n'est pas fait et 
+        self.charger_secteurs()
+        secteurs = self.secteurs
 
         #Convertir les coordonnées de toutes les collisions en nombres
         latitudes = pd.to_numeric(self.df["LOC_LAT"], errors="coerce")
@@ -167,11 +165,7 @@ class DataHandler():
         #exactement comme des valeurs de x et y dans un plan cartésien. "crs=" veut dire Coordinate Reference System, on l'utilise 
         #pour indiquer nos données sont sous quel format le code "EPSG:4326" correspond à WGS 84 le format sous lequel mon GEOJson est.
         points = gpd.GeoDataFrame(index=self.df.index[valides], geometry=gpd.points_from_xy(longitudes[valides], latitudes[valides]), crs="EPSG:4326")
-
-        #Seulement garder les deux colonnes dont a de besoin pour la suite (le nom des secteurs et le polygone qui les 
-        #représente dans "geometry") et convertir en "EPSG:4326" (on doit être utiliser le même système partout)
-        secteurs = secteurs[["NOM", "geometry"]].to_crs("EPSG:4326")
-
+      
         #Jointure spatiale (qui donne le dataframe final) entre points et secteurs, c'est plutôt compliqué mais en gros ça
         #associe chaque point au secteur auquel il appartient. "how="left"" indique qu'on veut garder toutes les lignes 
         #du dataframe de gauche, en l'occurence "points". Ceci signifie qu'on garde tout les points même ceux qui ne sont pas 
@@ -182,6 +176,21 @@ class DataHandler():
         #Garde un seul secteur pour chaque collision (la jointure spatiale est sujette à créer ce genre de problème)
         #"groupby(level=0)" groupe ensemble toutes les lignes qui ont le même indice et ".first" ne garde que la première
         noms_secteurs = resultats["NOM"].groupby(level=0).first()
-
+        
         #Mettre les secteurs dans notre dataframe original qui est utilisé partout.
         self.df.loc[noms_secteurs.index, "SECTEUR"] = noms_secteurs
+
+    #Fontion qui s'occupe de charger le GEOJson 
+    def charger_secteurs(self):
+        #Charger le GEOJson contenant les limites administratives de l'île de montréal seulement si ce n'est pas déjà fait
+        if self.secteurs is None:
+            secteurs = gpd.read_file(self.resource_path("arrondissements_montreal.geojson"))
+
+            #Vérifier que le fichier contient la colonne "NOM" parceque si nous n'avons pas le nom des arrondissements, tout ça sert à rien
+            if "NOM" not in secteurs.columns:
+                raise ValueError("La colonne NOM est absente du GeoJSON.")
+
+            #Seulement garder les deux colonnes dont a de besoin pour la suite (le nom des secteurs et le polygone qui les 
+            #représente dans "geometry") et convertir en "EPSG:4326" (on doit être utiliser le même système partout)
+            #Garder les secteurs en mémoire pour que la carte puisse être cliquable sans tout recalculer en tout temps.
+            self.secteurs = secteurs[["NOM", "geometry"]].to_crs("EPSG:4326")
