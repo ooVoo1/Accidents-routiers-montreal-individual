@@ -4,6 +4,7 @@ from tkinter import messagebox ,filedialog
 from tkintermapview import TkinterMapView
 from shapely.geometry import Point
 from PIL import Image, ImageDraw, ImageTk, ImageFont, ImageGrab
+from graphes.heatmap_secteur import FenetreSecteur
 
 class MapMaker(ctk.CTkFrame):
     def __init__(self, master, handler):
@@ -26,6 +27,8 @@ class MapMaker(ctk.CTkFrame):
         self.carte.set_zoom(11)
         #Garde en mémoire le dernier couple de filtre utilisé
         self.filtres_actuels = None
+        #Garde en mémoire les données filtrées de la carte pour la heatmap par secteur
+        self.donnees_filtrees = None
         #Garde en mémoire le zoom actuel
         self.dernier_pas = self.pas_pour_zoom()
         #Surveiller pour un changement de zoom
@@ -74,6 +77,9 @@ class MapMaker(ctk.CTkFrame):
         #Filtrer pour le type de véhicule choisi (voir explication ci-dessus)
         if colonne_vehicule is not None:
             donnees = donnees[pd.to_numeric(donnees[colonne_vehicule], errors="coerce").fillna(0) > 0]
+
+        #Conserver toutes les colonnes des collisions filtrées pour la heatmap par secteur
+        self.donnees_filtrees = donnees
 
         #Mettre à jour les statistiques en bas de l'écran (.master pour faire appel à une fonction de carte.py
         #qui gére l'affichage et donc, par extension l'affichage des statistiques)
@@ -392,7 +398,21 @@ class MapMaker(ctk.CTkFrame):
         #Récupérer le nom du secteur sélectionné
         secteur = correspondances.iloc[0]["NOM"]
 
-        print("Secteur sélectionné :", secteur)
+        #Vérifier que la carte a déjà été actualisée (sinon pas de données pour le graphique de heatmap)
+        if self.donnees_filtrees is None:
+            messagebox.showinfo("Aucune donnée", "Veuillez actualiser la carte avant de sélectionner un secteur.")
+            return
+
+        #Juste garder les collisions du bon secteur 
+        donnees_secteur = self.donnees_filtrees[self.donnees_filtrees["SECTEUR"] == secteur]
+
+        #Vérifier si le secteur en question a des collisions sinon arrêter l'éxécutuion de la fonction
+        if donnees_secteur.empty:
+            messagebox.showinfo("Aucun résultat", f"Aucune collision ne correspond aux filtres dans {secteur}.")
+            return
+
+        #Créer la fenêtre popup qui contient la heatmap du secteur sélectionné.
+        self.fenetre_secteur = FenetreSecteur(self, secteur, donnees_secteur)
 
     #Fonction qui convertit l'objet "event" de Tkinter en coordonnées que selectionner_secteur() peut utiliser
     def double_clic_secteur(self, event):
