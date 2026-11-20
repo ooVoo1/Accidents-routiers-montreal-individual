@@ -25,7 +25,7 @@ class MainApplication(ctk.CTk):
         #Chargement automatique du CSV pour les tests
         self.handler.df = pd.read_csv(self.handler.resource_path("collisions_routieres.csv"))
         #Logo de l'application
-        self.iconbitmap(self.handler.resource_path("images/logo_routesure2.ico"))
+        self.iconbitmap(self.handler.resource_path("images/icone_routesure.ico"))
         #Créer le menu
         self.create_menu()
 
