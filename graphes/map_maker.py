@@ -87,8 +87,6 @@ class MapMaker(ctk.CTkFrame):
 
         #Faire une copie des deux colonnes qui nous intéressent pour pouvoir les convertir en valeurs numériques sans modifier le dataframe de base
         donnees = donnees[["LOC_LAT", "LOC_LONG"]].copy()
-        print("Filtres reçus :", annee, gravite, colonne_victime, colonne_vehicule)
-        print("Collisions après filtrage :", len(donnees))
         #Convertir les coordonnées en nombres et transformer en NaN les collisions avec une position inconnue pour pouvoir faire .dropna() après
         donnees["LOC_LAT"] = pd.to_numeric(donnees["LOC_LAT"], errors="coerce")
         donnees["LOC_LONG"] = pd.to_numeric(donnees["LOC_LONG"], errors="coerce")
@@ -139,8 +137,6 @@ class MapMaker(ctk.CTkFrame):
             self.icones_groupes.append(icone)
             self.carte.set_marker(groupe.latitude, groupe.longitude, icon=icone, icon_anchor="center")
         
-        print(f"{total} collisions représentées dans {len(groupes)} regroupements.")
-
     def creer_icone_groupe(self, nombre):
         #Choisir la couleur, la taille de l'icone et taille du texte selon le nombre de collisions à afficher
         if nombre < 25:
@@ -392,7 +388,6 @@ class MapMaker(ctk.CTkFrame):
 
         #Vérifier si le clic peut être associé à au moins un secteur, si non arrêter l'exécution de la fonction.
         if correspondances.empty:
-            print("Aucun secteur trouvé à cet emplacement.")
             return
 
         #Récupérer le nom du secteur sélectionné
@@ -421,3 +416,24 @@ class MapMaker(ctk.CTkFrame):
 
         #Appeler notre fonction existante pour identifier le secteur
         self.selectionner_secteur(coordonnees)
+
+    #Fonction qui est utilisée pour trier et simplifier le jeu de données de la carte pour l'exportation
+    def obtenir_donnees_export(self):
+        #Vérifier que la carte a déjà été actualisée avec des résultats pour ne pas rien exporter sinon retourner un dataframe vide 
+        #pour ne pas que l'application plante
+        if self.filtres_actuels is None or self.donnees_filtrees is None:
+            return pd.DataFrame()
+        donnees = self.donnees_filtrees.copy()
+        #Trouver les colonnes qui peuvent potentiellement ne servir à rien
+        colonnes_inutiles = [col for col in donnees.columns if col.startswith("nb_") or col.startswith("NB_")]
+
+        #Supprimer les colonnes de véhicules qui contiennent juste des 0 (elles ne donnent pas d'information utile)
+        for colonne in colonnes_inutiles:
+            if (donnees[colonne].fillna(0) == 0).all():
+                donnees = donnees.drop(columns=[colonne])
+
+        #Supprimer les colonnes qui ne contiennent aucune donnée
+        donnees = donnees.dropna(axis=1, how="all")
+
+        return donnees      
+

@@ -56,7 +56,6 @@ class DataHandler():
             # Réinitialiser les anciens résultats
             self.df_resultats = pd.DataFrame()
 
-            print("Données chargées!")
             return True
 
         except Exception as erreur:

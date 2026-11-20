@@ -256,7 +256,7 @@ class MainApplication(ctk.CTk):
         #File menu
         file_menu = tk.Menu(menu, tearoff=0)
         menu.add_cascade(label="Fichier", menu=file_menu)
-        file_menu.add_command(label="Sauvegarder données", command=self.handler.sauvegarder_donnees)
+        file_menu.add_command(label="Sauvegarder données", command=self.sauvegarder_donnees_actuelles)
         file_menu.add_command(label="Sauvegarder graphique", command=self.handler.sauvegarder_graphique)
         file_menu.add_command(label="Charger", command=self.charger_et_actualiser)
         file_menu.add_command(label="Sauvegarder carte", command=lambda: self.page_carte.map.sauvegarder_carte())
@@ -273,6 +273,15 @@ class MainApplication(ctk.CTk):
 
         # Graphique à barres
         graphiques_menu.add_command(label="Graphique à barres", command=lambda: self.afficher_page(self.page_barres))
+
+    #Fonction qui adapte l'exportation des données pour quelle soit viable avec la carte
+    def sauvegarder_donnees_actuelles(self):
+    #Si on est sur la carte, récupérer ses données avec la fonction de map_maker
+        if self.page_actuelle == self.page_carte:
+            self.handler.df_resultats = self.page_carte.map.obtenir_donnees_export()
+
+        #Utiliser l'export créé par Alvaro comme pour les graphiques du projet en équipe
+        self.handler.sauvegarder_donnees()
 
         
 if __name__ == "__main__":

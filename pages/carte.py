@@ -20,7 +20,7 @@ class Carte(ctk.CTkFrame):
         #Encadré des dropdown menu
         self.menu_frame = ctk.CTkFrame(self, fg_color="#EAF4FC", border_width=1, border_color="#B8D6EA", corner_radius=12)
         self.menu_frame.place(relx=0.0175, rely=0.08, anchor="nw", relwidth=0.20, relheight=0.57)
-        #Créer et placer Boutton pour actualiser avec fonction lambda qui vas chercher l'info des 4 drop down menu pour actualiser la carte
+        #Créer et placer Boutton pour actualiser avec fonction lambda qui vas chercher l'info des 4 dropdown menu pour actualiser la carte
         self.bouton_actualiser = ctk.CTkButton(self,text="Actualiser la carte", compound="left",
         command=lambda: self.map.update_map(self.selection.get(), self.selection_gravite.get(),
         self.colonnes_victimes.get(self.selection_victime.get()), self.colonnes_vehicules.get(self.selection_vehicule.get())), #Ici, il faut aller les chercher les bon noms de colonnes dans les dico d'équivalence
