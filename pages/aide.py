@@ -90,7 +90,7 @@ class Aide(ctk.CTkFrame):
         ["circulaire.png"])
 
         ajouter_section("5. Graphique à barres", "Le graphique à barres permet d'observer la répartition d'un certain type de victime à travers les mois d'une année.\n\n"
-        "Sélectionnez une année et un type de victime dans les menu déroulant. Chaque barre représente le nombre de victime dans un mois de l'année sélectionnée.",
+        "Sélectionnez une année et un type de victime dans les menus déroulants. Chaque barre représente le nombre de victime dans un mois de l'année sélectionnée.",
         ["barre.png"])
 
         ajouter_section("6. Carte interactive","La carte interactive permet de visualiser la répartition géographique des collisions routières sur l'île de Montréal.\n\n"

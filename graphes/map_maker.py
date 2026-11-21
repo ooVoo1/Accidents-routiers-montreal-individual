@@ -45,6 +45,12 @@ class MapMaker(ctk.CTkFrame):
             messagebox.showwarning("Aucune donnée", "Veuillez charger un fichier CSV.")
             return
         df = self.handler.df
+            
+        #Vérifier que les colonnes obligatoires existent
+        colonnes = ["AN", "GRAVITE", "LOC_LAT", "LOC_LONG"]
+        if not all(colonne in df.columns for colonne in colonnes):
+            messagebox.showerror("Erreur", "Certaines colonnes nécessaires sont absentes du CSV.")
+            return
 
         #Associer chaque collision à son secteur si ça n'a pas déjà été fait.
         if "SECTEUR" not in df.columns:
@@ -53,12 +59,6 @@ class MapMaker(ctk.CTkFrame):
             except Exception as erreur:
                 messagebox.showerror("Erreur GeoJSON", str(erreur))
                 return
-            
-        #Vérifier que les colonnes obligatoires existent
-        colonnes = ["AN", "GRAVITE", "LOC_LAT", "LOC_LONG"]
-        if not all(colonne in df.columns for colonne in colonnes):
-            messagebox.showerror("Erreur", "Certaines colonnes nécessaires sont absentes du CSV.")
-            return
 
         #Juste garder les lignes du CSV avec la bonne année
         donnees = df
@@ -294,11 +294,17 @@ class MapMaker(ctk.CTkFrame):
     
     #Fonction qui sauvegarde la portion de la carte actuellement visible
     def sauvegarder_carte(self):
-        #".winfo_ismapped()" vérifie si un widget est actuellement visible à l'écran (dans notre cas la carte) et affiche 
+        #".winfo_ismapped()" vérifie si un widget est actuellement visible à l'écran (dans notre cas la carte) et on affiche 
         #un message d'erreur si ce n'est pas la cas, parceque l'export fonctionne avec une capture d'écran donc si la carte
         #n'est pas visible, on vas capturer... ben pas la carte
         if not self.carte.winfo_ismapped():
             messagebox.showwarning("Carte non visible", "Veuillez afficher la page Carte avant de l'exporter.")
+            return
+
+        #Vérifier si des filtres ont déjà été appliqué à la carte parceque si ce n'est pas le cas, notre petit carré
+        #semi-transparent qui dit quels filtres sont appliqués sur la carte afficheras quelque chose de pas vrai.
+        if self.filtres_actuels is None:
+            messagebox.showwarning("Aucune donnée", "Veuillez actualiser la carte avant de l'exporter.")
             return
 
         #Exécute toutes les opérations en attente sur la carte (sinon si tu capture juste après avoir actualisé la carte et que
@@ -317,13 +323,30 @@ class MapMaker(ctk.CTkFrame):
             #Prendre un screenshot de la carte à l'aide des coordonnées déterminées plus haut
             capture = ImageGrab.grab(bbox=(gauche, haut, droite, bas))
 
+            #Récupérer les filtres appliqués sur la carte en décomposant le tuple filtres_actuels
+            annee, gravite, colonne_victime, colonne_vehicule = self.filtres_actuels
 
-            #Créer une liste avec ce qu'on veut ajouter sur la capture de la carte
-            filtres = ["Filtres actuels",
-                f"Année : {self.master.selection.get()}",
-                f"Gravité : {self.master.selection_gravite.get()}",
-                f"Type de victime : {self.master.selection_victime.get()}",
-                f"Véhicule impliqué : {self.master.selection_vehicule.get()}"]
+            #Déterminer quel est le filtre de victime appliqué.
+            nom_victime = "Aucun filtre"
+            for nom, colonne in self.master.colonnes_victimes.items():
+                if colonne == colonne_victime:
+                    nom_victime = nom
+                    break
+
+            #Déterminer quel est le filtre de véhicule appliqué.
+            nom_vehicule = "Aucun filtre"
+            for nom, colonne in self.master.colonnes_vehicules.items():
+                if colonne == colonne_vehicule:
+                    nom_vehicule = nom
+                    break
+
+            #Créer une liste avec tout ce que l'on veut écrire sur notre petit carré semi-transparent
+            filtres = ["Filtres appliqués",
+                f"Année : {annee}",
+                f"Gravité : {gravite}",
+                f"Type de victime : {nom_victime}",
+                f"Véhicule impliqué : {nom_vehicule}"]
+
 
             #Créer un objet qui vas nous permettre d'écrire sur le screenshot
             dessin = ImageDraw.Draw(capture, "RGBA")
@@ -354,12 +377,12 @@ class MapMaker(ctk.CTkFrame):
 
             #Demander ou et sous quel nom enregistrer l'image
             chemin = filedialog.asksaveasfilename(title="Sauvegarder la carte", defaultextension=".png",
-                filetypes=[("Images PNG", "*.png")], initialfile="carte_routesure.png")
+            filetypes=[("Images PNG", "*.png")], initialfile="carte_routesure.png")
 
             #Pour si l'utilisateur annule avant d'enregistrer
             if not chemin:
                 return
-            #Finalement, enregistrer la screen de la carte
+            #Finalement, enregistrer la capture de la carte
             capture.save(chemin, "PNG")
 
         except Exception as erreur:
@@ -425,7 +448,7 @@ class MapMaker(ctk.CTkFrame):
             return pd.DataFrame()
         donnees = self.donnees_filtrees.copy()
         #Trouver les colonnes qui peuvent potentiellement ne servir à rien
-        colonnes_inutiles = [col for col in donnees.columns if col.startswith("nb_") or col.startswith("NB_")]
+        colonnes_inutiles = [col for col in donnees.columns if col.startswith("nb_")]
 
         #Supprimer les colonnes de véhicules qui contiennent juste des 0 (elles ne donnent pas d'information utile)
         for colonne in colonnes_inutiles:

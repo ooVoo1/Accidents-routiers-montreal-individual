@@ -115,7 +115,7 @@ class Carte(ctk.CTkFrame):
         if self.handler.df is None:
             return
         
-        #Juste Garder les colonnes qui sont présente dans le csv (Gestion d'erreur si qqu charge un CSV sous le mauvais format) et ajouter l'option générale
+        #Juste Garder les colonnes qui sont présente dans le CSV (Gestion d'erreur si qqu charge un CSV sous le mauvais format) et ajouter l'option générale
         options = ["Aucun filtre"]
         for nom, colonne in self.colonnes_victimes.items():
             if colonne in self.handler.df.columns:
@@ -138,7 +138,7 @@ class Carte(ctk.CTkFrame):
         if self.handler.df is None:
             return
 
-        #Juste Garder les colonnes qui sont présente dans le csv (Gestion d'erreur si qqu charge un CSV sous le mauvais format) et ajouter l'option générale
+        #Juste garder les colonnes qui sont présente dans le CSV (Gestion d'erreur si qqu charge un CSV sous le mauvais format) et ajouter l'option générale
         options = ["Aucun filtre"]
         for nom, colonne in self.colonnes_vehicules.items():
             if colonne in self.handler.df.columns:

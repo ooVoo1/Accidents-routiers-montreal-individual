@@ -35,7 +35,7 @@ class DataHandler():
 
             # Liste des colonnes nécessaires au fonctionnement de l'application
             colonnes_obligatoires = ["AN", "DT_ACCDN", "GRAVITE", "NB_MORTS", "NB_BLESSES_GRAVES", "NB_BLESSES_LEGERS", 
-            "NB_VICTIMES_TOTAL", "NB_VICTIMES_PIETON", "NB_VICTIMES_MOTO", "NB_VICTIMES_VELO"]
+            "NB_VICTIMES_TOTAL", "NB_VICTIMES_PIETON", "NB_VICTIMES_MOTO", "NB_VICTIMES_VELO", "LOC_LAT", "LOC_LONG"]
 
             # Trouver les colonnes manquantes
             colonnes_manquantes = []
@@ -148,7 +148,10 @@ class DataHandler():
 
         #Crée une nouvelle colonne dans le dataframe pour assigner les secteurs et remplis cette colonne de NA
         #pour dire qu'aucun secteur n'a été assigné encore
-        self.df["SECTEUR"] = pd.NA
+        #Arrêter l'exécution de la fonction si il n'y a aucune collision avec des coordonnées possibles
+        if not valides.any():
+            self.df["SECTEUR"] = pd.NA
+            return
         
         #Arrêter l'exécution de la fonction si il n'y a aucune collision avec des coordonnées possibles
         if not valides.any():
@@ -175,6 +178,9 @@ class DataHandler():
         #Garde un seul secteur pour chaque collision (la jointure spatiale est sujette à créer ce genre de problème)
         #"groupby(level=0)" groupe ensemble toutes les lignes qui ont le même indice et ".first" ne garde que la première
         noms_secteurs = resultats["NOM"].groupby(level=0).first()
+
+        #Créer la colonne qui vas contenir les secteurs
+        self.df["SECTEUR"] = pd.NA
         
         #Mettre les secteurs dans notre dataframe original qui est utilisé partout.
         self.df.loc[noms_secteurs.index, "SECTEUR"] = noms_secteurs
