@@ -179,7 +179,7 @@ class DataHandler():
         #"groupby(level=0)" groupe ensemble toutes les lignes qui ont le même indice et ".first" ne garde que la première
         noms_secteurs = resultats["NOM"].groupby(level=0).first()
 
-        #Créer la colonne qui vas contenir les secteurs
+        #Créer la colonne qui vas contenir les secteurs et la remplir de NA pour signifier qu'il n'y a rien d'assigné pour l'instant
         self.df["SECTEUR"] = pd.NA
         
         #Mettre les secteurs dans notre dataframe original qui est utilisé partout.

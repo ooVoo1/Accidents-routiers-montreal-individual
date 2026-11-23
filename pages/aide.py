@@ -90,7 +90,7 @@ class Aide(ctk.CTkFrame):
         ["circulaire.png"])
 
         ajouter_section("5. Graphique à barres", "Le graphique à barres permet d'observer la répartition d'un certain type de victime à travers les mois d'une année.\n\n"
-        "Sélectionnez une année et un type de victime dans les menus déroulants. Chaque barre représente le nombre de victime dans un mois de l'année sélectionnée.",
+        "Sélectionnez une année et un type de victime dans les menus déroulants. Chaque barre représente le nombre de victimes dans un mois de l'année sélectionnée.",
         ["barre.png"])
 
         ajouter_section("6. Carte interactive","La carte interactive permet de visualiser la répartition géographique des collisions routières sur l'île de Montréal.\n\n"
@@ -111,7 +111,7 @@ class Aide(ctk.CTkFrame):
         ["secteur1.png", "secteur2.png"])
 
         ajouter_section("8. Exporter les données en CSV", "L'objectif de cette fonctionnalité est de permettre l'enregistrement des données représentées dans le graphique.\n\n"
-        "Vous pouvez utiliser le menu « Fichier », sélectionner l'option « Sauvegarder Données », puis choisir le nom et l'emplacement du fichier CSV.\n\n"
+        "Vous pouvez utiliser le menu « Fichier », sélectionnez l'option « Sauvegarder Données », puis choisir le nom et l'emplacement du fichier CSV.\n\n"
         "La procédure est la même pour exporter les données de la carte interactive. Dans ce cas, toutes les collisions correspondant aux filtres appliqués seront enregistrées dans le fichier CSV.",
         ["export_csv1.png","export_csv2.png"])
 

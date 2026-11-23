@@ -248,7 +248,9 @@ class MainApplication(ctk.CTk):
             self.page_carte.label_valeur_geolocalisees.configure(text="0")
             #Actualiser les dropdown menu pour la carte
             self.page_carte.actualiser_dropdowns()
-            # Actualiser une autre fois pour s'assurer que les données viennent de la page courante.
+            #Actualiser une autre fois pour s'assurer que les données viennent de la page courante. Parceque nos update sur les 
+            #graphes plus haut actualisent tous les données et comme le dernier appel est avec le graphique à barre, sans cette ligne,
+            #nous risquons d'exporter les données ou le graphique de la page graphique à barre même sans y être.
             self.actualiser_page_active()
         
     def create_menu(self):
