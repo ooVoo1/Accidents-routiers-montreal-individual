@@ -23,36 +23,36 @@ class GraphMaker(ctk.CTkFrame):
         self.graphe_df = pd.DataFrame()
 
     def create_graph(self, x, y, titre, label_y):
-        # Effacer ancien graphique
+        #Effacer l'ancien graphique
         self.ax.clear()
 
         # Tracer la nouvelle courbe
         self.ax.plot(x, y, marker="o")
 
-        # Personnaliser
+        #Personnaliser
         self.ax.set_xticks(x)
         self.ax.set_title(titre)
         self.ax.set_xlabel("Année")
         self.ax.set_ylabel(label_y)
 
-        # Ajouter quadrillage mineur
+        #Ajouter un quadrillage mineur
         self.ax.xaxis.set_minor_locator(AutoMinorLocator(5))
         self.ax.yaxis.set_minor_locator(AutoMinorLocator(5))
 
-        # Quadrillage majeur
+        #Quadrillage majeur
         self.ax.grid(which="major", linestyle="-", linewidth=0.8, alpha=0.5)
 
-        # Quadrillage mineur
+        #Quadrillage mineur
         self.ax.grid(which="minor", linestyle=":", linewidth=0.5, alpha=0.5)     
 
-        # Ajuster espacement
+        #Ajuster l'espacement
         self.figure.tight_layout()
 
-        # Refaire graphique
+        #Refaire le graphique
         self.canvas.draw_idle()
 
     def update_graph(self, choix, texte_stats):
-        #Si les données ne sont pas chargées, arrêter l'éxecution
+        #Si les données ne sont pas chargées, arrêter l'exécution
         if self.handler.df.empty:
             return
 
@@ -62,14 +62,19 @@ class GraphMaker(ctk.CTkFrame):
         "Nombre de victimes piétons": "NB_VICTIMES_PIETON","Nombre de victimes moto": "NB_VICTIMES_MOTO",
         "Nombre de victimes vélo": "NB_VICTIMES_VELO"}
 
-        # Créer serie avec les données souhaitée pour le graphique
+        #Créer une série avec les données souhaitées pour le graphique
         if choix == "Nombre de collisions":
             resultats = self.handler.df.groupby("AN").size()
         else:
             colonne = colonnes[choix]
             resultats = self.handler.df.groupby("AN")[colonne].sum()
+        #Si le fichier CSV ne contient aucune valeur admissible de "AN" on arrête l'exécution de la fonction
+        #puisque nous ne pourrons pas construire notre graphique sans années
+        if resultats.empty:
+            messagebox.showwarning("Aucune donnée", "Aucune année valide dans le fichier.")
+            return
 
-        # Garder les résultats pour en cas d'exportation
+        #Garder les résultats en cas d'exportation
         self.handler.df_resultats = resultats.reset_index(name=choix)
 
         # Créer à nouveau le graphique avec les nouvelles données
@@ -81,7 +86,7 @@ class GraphMaker(ctk.CTkFrame):
         maximum = resultats.max()
         noms_mois = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
 
-        #Récupérer mois de chaque accident
+        #Récupérer le mois de chaque accident
         mois = pd.to_datetime(self.handler.df["DT_ACCDN"], errors="coerce").dt.month
 
         #Classer les accidents par leur mois
@@ -89,18 +94,15 @@ class GraphMaker(ctk.CTkFrame):
             resultats_mois = self.handler.df.groupby(mois).size()
         else:
             resultats_mois = self.handler.df.groupby(mois)[colonne].sum()
-        if resultats.empty:
-            messagebox.showwarning("Aucune donnée","Aucune année valide dans le fichier.")
-            return
 
-        #Assigner meilleur mois et gérer le cas ou ya rien dans la variable
+        #Assigner le meilleur mois et gérer le cas où il n'y a rien dans la variable
         if resultats_mois.empty:
             mois_record = "Indisponible"
         else:
             numero_mois = int(resultats_mois.idxmax())
             mois_record = noms_mois[numero_mois - 1]
 
-        #Créer texte pour statsbox
+        #Créer le texte pour statsbox
         texte = (f"Total : {int(total)}\n\n"
         f"Année record : {int(annee_record)}\n\n"
         f"Maximum annuel : {int(maximum)}\n\n"

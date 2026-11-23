@@ -20,10 +20,10 @@ class Carte(ctk.CTkFrame):
         #Encadré des dropdown menu
         self.menu_frame = ctk.CTkFrame(self, fg_color="#EAF4FC", border_width=1, border_color="#B8D6EA", corner_radius=12)
         self.menu_frame.place(relx=0.0175, rely=0.08, anchor="nw", relwidth=0.20, relheight=0.57)
-        #Créer et placer Boutton pour actualiser avec fonction lambda qui vas chercher l'info des 4 dropdown menu pour actualiser la carte
+        #Créer et placer Bouton pour actualiser avec fonction lambda qui va chercher l'info des 4 dropdown menu pour actualiser la carte
         self.bouton_actualiser = ctk.CTkButton(self,text="Actualiser la carte", compound="left",
         command=lambda: self.map.update_map(self.selection.get(), self.selection_gravite.get(),
-        self.colonnes_victimes.get(self.selection_victime.get()), self.colonnes_vehicules.get(self.selection_vehicule.get())), #Ici, il faut aller les chercher les bon noms de colonnes dans les dico d'équivalence
+        self.colonnes_victimes.get(self.selection_victime.get()), self.colonnes_vehicules.get(self.selection_vehicule.get())), #Ici, il faut aller les chercher les bons noms de colonnes dans les dico d'équivalence
         font=("Arial", 15, "bold"), height=52, width=290, corner_radius=10)
         self.bouton_actualiser.place(relx=0.0175, rely=0.65, anchor="nw", relwidth=0.20, relheight=0.05)
 
@@ -56,7 +56,7 @@ class Carte(ctk.CTkFrame):
 
         #Variable qui conserve le type de véhicule sélectionné
         self.selection_vehicule = ctk.StringVar(value="Aucun filtre")
-        #Menu des types véhicules impliqués
+        #Menu des types de véhicules impliqués
         self.menu_vehicule = ctk.CTkOptionMenu(self.menu_frame, variable=self.selection_vehicule, values=["Aucun filtre"])
         self.menu_vehicule.place(relx=0.05, rely=0.60, anchor="nw", relwidth=0.90)
         #Label du menu
@@ -72,7 +72,7 @@ class Carte(ctk.CTkFrame):
         #Créer l'encadré à statistiques
         self.creer_encadre_stats()
 
-    #Fonction qui gére le dropdown menu des années
+    #Fonction qui gère le dropdown menu des années
     def actualiser_annee(self):
         #Vérifier si la colonne "AN" existe ou si nous n'avons pas de dataframe
         if self.handler.df is None or "AN" not in self.handler.df.columns:
@@ -85,11 +85,11 @@ class Carte(ctk.CTkFrame):
         #Actualiser les choix du dropdown menu
         self.menuDeroulantCarte.configure(values=options_annees)
 
-        #Réinitialiser la sélection si l'année choisie n'existe plus (Ex.:2019 de déjà sélectionné, puis on loade un CSV avec 2020 à 2025. 2019 vas s'enlever et l'option de base est remise)
+        #Réinitialiser la sélection si l'année choisie n'existe plus (Ex.:2019 déjà sélectionné, puis on loade un CSV avec 2020 à 2025. 2019 va s'enlever et l'option de base est remise)
         if self.selection.get() not in options_annees:
             self.selection.set("Toutes les années")
 
-    #Fonction qui gére le dropdown menu de la gravité des collisions
+    #Fonction qui gère le dropdown menu de la gravité des collisions
     def actualiser_gravite(self):
         #Vérifier si la colonne "GRAVITE" existe ou si nous n'avons pas de dataframe
         if self.handler.df is None or "GRAVITE" not in self.handler.df.columns:
@@ -103,7 +103,7 @@ class Carte(ctk.CTkFrame):
         if self.selection_gravite.get() not in options_gravite:
             self.selection_gravite.set("Toutes les gravités")
 
-    #Fonction qui gére le dropdown menu des victimes impliquées
+    #Fonction qui gère le dropdown menu des victimes impliquées
     def actualiser_victimes(self):
         #Dictionnaire d'équivalence pour avoir des belles options dans l'application
         self.colonnes_victimes = {
@@ -138,7 +138,7 @@ class Carte(ctk.CTkFrame):
         if self.handler.df is None:
             return
 
-        #Juste garder les colonnes qui sont présente dans le CSV (Gestion d'erreur si qqu charge un CSV sous le mauvais format) et ajouter l'option générale
+        #Juste garder les colonnes qui sont présentes dans le CSV (Gestion d'erreur si qqu charge un CSV sous le mauvais format) et ajouter l'option générale
         options = ["Aucun filtre"]
         for nom, colonne in self.colonnes_vehicules.items():
             if colonne in self.handler.df.columns:
@@ -149,7 +149,7 @@ class Carte(ctk.CTkFrame):
         if self.selection_vehicule.get() not in options:
             self.selection_vehicule.set("Aucun filtre")
 
-    #Fonction pour racourcir le code dans le main et dans le constructeur de Carte
+    #Fonction pour raccourcir le code dans le main et dans le constructeur de Carte
     def actualiser_dropdowns(self):
         self.actualiser_annee()
         self.actualiser_gravite()
@@ -158,7 +158,7 @@ class Carte(ctk.CTkFrame):
 
     #Fonction pour créer l'encadré qui contient les statistiques dans le bas de l'écran
     def creer_encadre_stats(self):
-        #Créer le grand encadré bleu pâle pour mettre les statitistiques et le placer sous la carte
+        #Créer le grand encadré bleu pâle pour mettre les statistiques et le placer sous la carte
         self.stats_frame = ctk.CTkFrame(self, fg_color="#EAF4FC", border_width=1, border_color="#B8D6EA", corner_radius=12)
         self.stats_frame.place(relx=0.0175, rely=0.77, anchor="nw", relwidth=0.965, relheight=0.21)
 
@@ -174,29 +174,29 @@ class Carte(ctk.CTkFrame):
         self.label_valeur_secteur = self.creer_petit_encadre_stat("Secteur le plus touché", 1, 1)
         self.label_valeur_geolocalisees = self.creer_petit_encadre_stat("Collisions affichées", 0, 0)
 
-    #Fonction pour créer les petit encadré dans lesquels les statistiques sont
+    #Fonction pour créer les petit encadrés dans lesquels les statistiques sont
     def creer_petit_encadre_stat(self, titre, colonne, ligne):
         #Créer un petit encadré dans le grand encadré des statistiques
         petit_encadre_stat = ctk.CTkFrame(self.stats_frame, fg_color="white", corner_radius=8)
         #Pour relx: 0.02 = marge; colonne*0.325 = distance entre le début de deux encadrés 
-        #(parcequ'ils sont large de 0.305 et on veut garder 0.02 de distance entre chaque)
+        #(parce qu'ils sont large de 0.305 et on veut garder 0.02 de distance entre chaque)
         petit_encadre_stat.place(relx=0.02 + colonne * 0.325, rely=0.29 + ligne * 0.34, anchor="nw", relwidth=0.305, relheight=0.30)
 
         #Label qui identifie la statistique dans le petit encadré
         label_nom = ctk.CTkLabel(petit_encadre_stat, text=titre, font=("Arial", 12), text_color="#55718C")
         label_nom.place(relx=0.04, rely=0.05, anchor="nw")
 
-        #Label qui vas afficher la statistique en tant que telle(encore dans le petit encadré) pour l'instant je mets un tiret pour signifier qu'il n'y a rien
+        #Label qui va afficher la statistique en tant que telle(encore dans le petit encadré) pour l'instant je mets un tiret pour signifier qu'il n'y a rien
         label_valeur = ctk.CTkLabel(petit_encadre_stat, text="—", font=("Arial", 19, "bold"), text_color="#183F65")
         label_valeur.place(relx=0.04, rely=0.40, anchor="nw")
         #retourner le label qui affiche la statistique pour pouvoir l'assigner à la variable de la classe Carte
-        #associée dans creer_encadre_stats() qu'on vas pouvoir utiliser plus tard pour changer la statistique
+        #associée dans creer_encadre_stats() qu'on va pouvoir utiliser plus tard pour changer la statistique
         return label_valeur
 
-    #Fonction qui calcule et mets à jour les statistiques (sauf celle sur les collisions affichées qui est 
+    #Fonction qui calcule et met à jour les statistiques (sauf celle sur les collisions affichées qui est 
     #calculée et changée dans MapMaker puisque c'est cette classe qui a les informations nécessaires)
     def mettre_a_jour_stats(self, donnees):
-        #Nombre de collision après le filtrage (Collisions retenues)
+        #Nombre de collisions après le filtrage (Collisions retenues)
         nb_collisions = len(donnees)
         self.label_valeur_collisions.configure(text=f"{nb_collisions:,}".replace(",", " "))
 
@@ -207,7 +207,7 @@ class Carte(ctk.CTkFrame):
             total_victimes = int(victimes.sum())
             collisions_avec_victimes = int((victimes > 0).sum())
 
-            #Calcul du pourcentage avec gestion d'erreur si il n'y a aucune collisions dans les filtres (division par zéro)
+            #Calcul du pourcentage avec gestion d'erreur si il n'y a aucune collision dans les filtres (division par zéro)
             pourcentage = (collisions_avec_victimes / nb_collisions * 100) if nb_collisions > 0 else 0
 
             self.label_valeur_victimes.configure(text=f"{total_victimes:,}".replace(",", " "))
@@ -230,7 +230,7 @@ class Carte(ctk.CTkFrame):
         
         #Statistique sur le secteur le plus touché par les collisions dans les filtres actuels (Secteur le plus touché)
         if "SECTEUR" in donnees.columns and not donnees["SECTEUR"].dropna().empty:
-            #".value_counts()" compte le nombre d'occurence par secteur et trie les secteurs de celui avec le plus de collisions
+            #".value_counts()" compte le nombre d'occurences par secteur et trie les secteurs de celui avec le plus de collisions
             #jusqu'à celui qui en a le moins
             classement = donnees["SECTEUR"].value_counts()
 

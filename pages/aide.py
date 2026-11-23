@@ -8,13 +8,13 @@ class Aide(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
-        # Pour que la page remplisse la fenetre
+        #Pour que la page remplisse la fenêtre
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
         self.handler = DataHandler()
 
-        # Créer la page d'aide.
+        #Créer la page d'aide.
         self.creer_page_aide()
 
     def creer_page_aide(self):
@@ -110,13 +110,13 @@ class Aide(ctk.CTkFrame):
         "Les résultats présentés tiendront compte des filtres appliqués à la carte interactive.",
         ["secteur1.png", "secteur2.png"])
 
-        ajouter_section("8. Exporter les données en CSV", "L'objectif de cette fonctionnalité est de permettre l'enregistrement des données représentées dans le graphique.\n\n"
-        "Vous pouvez utiliser le menu « Fichier », sélectionnez l'option « Sauvegarder Données », puis choisir le nom et l'emplacement du fichier CSV.\n\n"
+        ajouter_section("8. Exporter les données en CSV", "L'objectif de cette fonctionnalité est de permettre l'enregistrement des données représentées dans le graphique ou sur la carte.\n\n"
+        "Vous pouvez utiliser le menu « Fichier », sélectionner l'option « Sauvegarder Données », puis choisir le nom et l'emplacement du fichier CSV.\n\n"
         "La procédure est la même pour exporter les données de la carte interactive. Dans ce cas, toutes les collisions correspondant aux filtres appliqués seront enregistrées dans le fichier CSV.",
         ["export_csv1.png","export_csv2.png"])
 
         ajouter_section("9. Enregistrer un graphique en PNG", "Une fonctionnalité d'exportation permet de sauvegarder le graphique affiché sous forme d'image PNG.\n\n"
-        "Vous pourrez ainsi réutiliser le graphique dans des présentations, des rapports ou d'autres documents. Sélectionner l'option Sauvegarder Graphique, puis choisir le nom et l'emplacement du fichier PNG.",
+        "Vous pourrez ainsi réutiliser le graphique dans des présentations, des rapports ou d'autres documents. Sélectionnez l'option Sauvegarder Graphique, puis choisissez le nom et l'emplacement du fichier PNG.",
         ["export_png1.png", "export_png2.png"])
 
         ajouter_section("10. Enregistrer la carte en PNG", "Vous pouvez également sauvegarder une image de la carte interactive telle qu'elle apparaît à l'écran.\n\n"

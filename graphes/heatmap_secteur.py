@@ -10,7 +10,7 @@ class FenetreSecteur(ctk.CTkToplevel):
 
     def __init__(self, master, secteur, donnees):
         super().__init__(master)
-        #Donner son nom à la fenêtre en fonctipm du secteur que l'on analyse
+        #Donner son nom à la fenêtre en fonction du secteur que l'on analyse
         self.title(f"Analyse du secteur : {secteur}")
         self.geometry("950x650")
         #La fenêtre ne peut pas être plus petite sinon l'affichage n'est pas beau
@@ -24,7 +24,7 @@ class FenetreSecteur(ctk.CTkToplevel):
         explication = ctk.CTkLabel(self, text="Données correspondant aux filtres appliqués à la carte", font=("Arial", 13))
         explication.pack(pady=(0, 15))
 
-        #Calculer les statistiques sur le secteur à afficher au dessus de la heatmap
+        #Calculer les statistiques sur le secteur à afficher au-dessus de la heatmap
         #Nombre de collisions
         nb_collisions = len(donnees)
         #Colonne du dataframe sur les victimes
@@ -35,7 +35,7 @@ class FenetreSecteur(ctk.CTkToplevel):
         nb_victimes = int(victimes.sum())
         #Nombre total de morts
         nb_deces = int(deces.sum())
-        #Calculer le pourcentage des collisions avec des victimes
+        #Calculer le pourcentage des collisions avec des victimes. .gt(0) = greater than zero (prend les valeurs strictement positives)
         pourcentage = (victimes.gt(0).sum() / nb_collisions * 100)
 
         #Créer le texte à afficher pour les statistiques
@@ -53,8 +53,8 @@ class FenetreSecteur(ctk.CTkToplevel):
         #Se faire un dataframe avec les mois et les jours de la semaine pour notre heatmap
         calendrier = pd.DataFrame({"jour": dates.dt.dayofweek, "mois": dates.dt.month}).dropna()
 
-        #Vérifier si nous avons des dates valides pour construire notre graphique, si non ne pas continuer avec la création du graphique
-        #Juste affihcer un message dans l'écran à la place
+        #Vérifier si nous avons des dates valides pour construire notre graphique, sinon ne pas continuer avec la création du graphique,
+        #juste afficher un message dans l'écran à la place
         if calendrier.empty:
             ctk.CTkLabel(self, text="Aucune date valide disponible pour créer la heatmap.").pack(pady=30)
             return
@@ -62,8 +62,8 @@ class FenetreSecteur(ctk.CTkToplevel):
         #Compter les collisions pour chaque combinaison jour/mois avec .crosstab()
         matrice = pd.crosstab(calendrier["jour"], calendrier["mois"])
 
-        #S'assurer d'avoir les 7 jours et les 12 mois on utilise "fill_value=0" pour remplacer les données manquantes
-        #Par exemple si aucune collision n'a eu lieu un dimanche de février avec les filtres sélectionnés on veut juste mettre 0 pas valeur manquante
+        #S'assurer d'avoir les 7 jours et les 12 mois. On utilise "fill_value=0" pour remplacer les données manquantes
+        #Par exemple, si aucune collision n'a eu lieu un dimanche de février avec les filtres sélectionnés, on veut juste mettre 0 pas valeur manquante
         matrice = matrice.reindex(index=range(7), columns=range(1, 13), fill_value=0)
 
         #Créer la figure matplotlib pour mettre la heatmap

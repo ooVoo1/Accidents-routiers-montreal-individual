@@ -14,18 +14,18 @@ class MapMaker(ctk.CTkFrame):
         self.carte = TkinterMapView(self, corner_radius=0)
         self.carte.pack(fill="both", expand=True)
         self.carte.canvas.bind("<Double-Button-1>", self.double_clic_secteur, add="+") #Commande pour que la carte réagisse aux doubles clics
-        #Créer image de 10x10 pixel full transparente
+        #Créer image de 10x10 pixels full transparente
         image_point = Image.new("RGBA", (10, 10), (0, 0, 0, 0))
         #Dessiner le point rouge sur notre image transparente
         ImageDraw.Draw(image_point).ellipse((1, 1, 8, 8), fill="#E24747")
         #Transformer en ImageTk pour pouvoir l'utiliser
         self.marqueur_collision = ImageTk.PhotoImage(image_point)
-        #Centrer sur Montréal (Coordonnées exactes trouvée par ChatGPT)
+        #Centrer sur Montréal (Coordonnées exactes trouvées par ChatGPT)
         self.carte.set_position(45.54, -73.5673)
         #Garde en mémoire la dernière position pour l'actualisation des points individuels (quand assez zoomé)
         self.derniere_position = self.carte.get_position()
         self.carte.set_zoom(11)
-        #Garde en mémoire le dernier couple de filtre utilisé
+        #Garde en mémoire le dernier couple de filtres utilisé
         self.filtres_actuels = None
         #Garde en mémoire les données filtrées de la carte pour la heatmap par secteur
         self.donnees_filtrees = None
@@ -37,7 +37,7 @@ class MapMaker(ctk.CTkFrame):
     def update_map(self, annee="Toutes les années", gravite="Toutes les gravités", colonne_victime=None, colonne_vehicule=None):
         #Enlever les possibles points sur la carte
         self.carte.delete_all_marker()
-        #Enlève les anciennes images de la mémoire
+        #Enlever les anciennes images de la mémoire
         self.icones_groupes = []
 
         # Vérifier que le CSV est chargé
@@ -82,7 +82,7 @@ class MapMaker(ctk.CTkFrame):
         self.donnees_filtrees = donnees
 
         #Mettre à jour les statistiques en bas de l'écran (.master pour faire appel à une fonction de carte.py
-        #qui gére l'affichage et donc, par extension l'affichage des statistiques)
+        #qui gère l'affichage et donc, par extension l'affichage des statistiques)
         self.master.mettre_a_jour_stats(donnees)
 
         #Faire une copie des deux colonnes qui nous intéressent pour pouvoir les convertir en valeurs numériques sans modifier le dataframe de base
@@ -101,7 +101,7 @@ class MapMaker(ctk.CTkFrame):
         total = len(donnees)
         #Message d'erreur si il n'y a pas de collision à afficher
         if total == 0:
-            #Actualiser les filtres pour que les statistiques n'affichent pas des faussetée et que des collisions qui n'ont 
+            #Actualiser les filtres pour que les statistiques n'affichent pas des faussetés et que des collisions qui n'ont 
             #pas raison d'être réapparaissent après avoir zoomé
             self.filtres_actuels = None
             # Réinitialiser le compteur des collisions affichées sinon il ne s'actualise pas tout seul
@@ -112,7 +112,7 @@ class MapMaker(ctk.CTkFrame):
         self.filtres_actuels = (annee, gravite, colonne_victime, colonne_vehicule)
 
         #Définir la taille des zones selon le zoom actuel (plus le pas est petit plus il y a de zones) si le zoom est assez grand,
-        #on régle le pas sur None parcequ'on veut voir les collision de façon individuelle (voir fonction plus bas).
+        #on règle le pas sur None parce qu'on veut voir les collision de façon individuelle (voir fonction plus bas).
         pas = self.pas_pour_zoom()
         # Si le zoom est assez élevé, afficher les collisions individuelles
         if pas is None:
@@ -120,13 +120,13 @@ class MapMaker(ctk.CTkFrame):
             return
         #Mettre à jour la statistique du nombre de collisions visibles
         self.actualiser_nombre_visible()
-        #Ici, on créée deux nouvelles colonnes au dataframe qui vont contenir la "zone" horizontale et verticale
+        #Ici, on crée deux nouvelles colonnes au dataframe qui vont contenir la "zone" horizontale et verticale
         #à laquelle chaque collision appartient on fait une division entière à plancher pour enlever les décimales
-        #et après on fait .astype(int) pour enlever le .0 dans XXXX.0 parceque ça n'a aucun rapport de numéroter avec des décimales
+        #et après on fait .astype(int) pour enlever le .0 dans XXXX.0 parce que ça n'a aucun rapport de numéroter avec des décimales
         donnees["zone_lat"] = (donnees["LOC_LAT"] // pas).astype(int)
         donnees["zone_lon"] = (donnees["LOC_LONG"] // pas).astype(int)
 
-        #Regrouper les collisions par case. .agg pour faire plusieurs opérations. On fait la moyenne des position en lon et en lat
+        #Regrouper les collisions par case. .agg pour faire plusieurs opérations. On fait la moyenne des positions en lon et en lat
         #des collisions dans la même case pour placer le point de la case fidélement. À la fin on calcule le nombre de collisions
         #dans la zone pour afficher le nombre sur le point représentatif 
         groupes = donnees.groupby(["zone_lat", "zone_lon"]).agg(latitude=("LOC_LAT", "mean"), longitude=("LOC_LONG", "mean"), nombre=("LOC_LAT", "size")).reset_index()
@@ -138,7 +138,7 @@ class MapMaker(ctk.CTkFrame):
             self.carte.set_marker(groupe.latitude, groupe.longitude, icon=icone, icon_anchor="center")
         
     def creer_icone_groupe(self, nombre):
-        #Choisir la couleur, la taille de l'icone et taille du texte selon le nombre de collisions à afficher
+        #Choisir la couleur, la taille de l'icône et taille du texte selon le nombre de collisions à afficher
         if nombre < 25:
             couleur = "#0CC021"
             taille_icone = 28
@@ -205,24 +205,24 @@ class MapMaker(ctk.CTkFrame):
             return None
 
     def surveiller_zoom(self):
-        #Déterminer le bon pas por le zoom actuel
+        #Déterminer le bon pas pour le zoom actuel
         nouveau_pas = self.pas_pour_zoom()
         #Déterminer la position actuelle de la carte
         position_actuelle = self.carte.get_position()
         #Condition qui vérifie si la carte a été déplacée
         position_changee = position_actuelle != self.derniere_position
 
-        #Vérifier si on as changé le zoom ou si le zoom actuel est None (donc affichage de points individuels) et que la position a changé
+        #Vérifier si on a changé le zoom ou si le zoom actuel est None (donc affichage de points individuels) et que la position a changé
         #Si c'est le cas mettre nos variables à jour
         if nouveau_pas != self.dernier_pas or (nouveau_pas is None and position_changee):
             self.dernier_pas = nouveau_pas
             self.derniere_position = position_actuelle
-            #Actualiser seulement si la carte à déjà été chargée
+            #Actualiser seulement si la carte a déjà été chargée
             if self.filtres_actuels is not None:
                 #Décomposer tuple pour actualiser la carte
                 annee, gravite, colonne_victime, colonne_vehicule = self.filtres_actuels
                 self.update_map(annee, gravite, colonne_victime, colonne_vehicule)
-        #Si il y a seulement la position qui à été changée et que le zoom n'est pas assez haut pour afficher les points individuels
+        #Si il y a seulement la position qui a été changée et que le zoom n'est pas assez haut pour afficher les points individuels
         #alors on actualise seulement la statistique du nombre de collisions affichées (juste si il y a des collisions d'affichée)
         elif position_changee:
             self.derniere_position = position_actuelle
@@ -245,14 +245,14 @@ class MapMaker(ctk.CTkFrame):
         #(sinon on affiche les 200 quelques milles collisions d'un coup...)
         visibles = donnees[donnees["LOC_LAT"].between(sud, nord) & donnees["LOC_LONG"].between(ouest, est)]
 
-        #Si il y a plus de 800 points à afficher dans la zone visible, on en garde que 800 pour conserver des performances minimales
+        #Si il y a plus de 1500 points à afficher dans la zone visible, on n'en garde que 1500 pour conserver des performances minimales
         if len(visibles) > 1500:
             visibles = visibles.sample(n=1500, random_state=67)
 
-        #Afficher les collisions sous forme de petits points rouge
+        #Afficher les collisions sous forme de petits points rouges
         for latitude, longitude in visibles.itertuples(index=False, name=None):
             self.carte.set_marker(latitude, longitude, icon=self.marqueur_collision, icon_anchor="center")
-        #Mettre à jour la statistique du nombre de collisions affichée avec le vrai nombre de collisions qu'on affiche (1500 au maximum)
+        #Mettre à jour la statistique du nombre de collisions affichées avec le vrai nombre de collisions qu'on affiche (1500 au maximum)
         self.master.label_valeur_geolocalisees.configure(text=f"{len(visibles):,}".replace(",", " "))
 
     #Nouvelle version de recentrer_montreal pour optimiser la performance
@@ -266,7 +266,7 @@ class MapMaker(ctk.CTkFrame):
         self.carte.set_zoom(11)
         self.carte.set_position(45.54, -73.5673)
 
-        #On mets à jour les variables que l'on surveille pour éviter d'actualiser 2 fois
+        #On met à jour les variables que l'on surveille pour éviter d'actualiser 2 fois
         self.dernier_pas = self.pas_pour_zoom()
         self.derniere_position = self.carte.get_position()
 
@@ -288,26 +288,26 @@ class MapMaker(ctk.CTkFrame):
         donnees = self.donnees_filtrees_geo
         visibles = donnees[donnees["LOC_LAT"].between(sud, nord) & donnees["LOC_LONG"].between(ouest, est)]
 
-        #Finalement, afficher dans les statistiques le nombre de collisions visible
+        #Finalement, afficher dans les statistiques le nombre de collisions visibles
         nombre = len(visibles)
         self.master.label_valeur_geolocalisees.configure(text=f"{nombre:,}".replace(",", " "))
     
     #Fonction qui sauvegarde la portion de la carte actuellement visible
     def sauvegarder_carte(self):
         #".winfo_ismapped()" vérifie si un widget est actuellement visible à l'écran (dans notre cas la carte) et on affiche 
-        #un message d'erreur si ce n'est pas la cas, parceque l'export fonctionne avec une capture d'écran donc si la carte
-        #n'est pas visible, on vas capturer... ben pas la carte
+        #un message d'erreur si ce n'est pas le cas, parceque l'export fonctionne avec une capture d'écran donc si la carte
+        #n'est pas visible, on va capturer... ben pas la carte
         if not self.carte.winfo_ismapped():
             messagebox.showwarning("Carte non visible", "Veuillez afficher la page Carte avant de l'exporter.")
             return
 
-        #Vérifier si des filtres ont déjà été appliqué à la carte parceque si ce n'est pas le cas, notre petit carré
+        #Vérifier si des filtres ont déjà été appliqués à la carte parceque si ce n'est pas le cas, notre petit carré
         #semi-transparent qui dit quels filtres sont appliqués sur la carte afficheras quelque chose de pas vrai.
         if self.filtres_actuels is None:
             messagebox.showwarning("Aucune donnée", "Veuillez actualiser la carte avant de l'exporter.")
             return
 
-        #Exécute toutes les opérations en attente sur la carte (sinon si tu capture juste après avoir actualisé la carte et que
+        #Exécute toutes les opérations en attente sur la carte (sinon si tu captures juste après avoir actualisé la carte et que
         #les points n'ont pas fini de loader tu capture la carte sans tout les points)
         self.carte.update_idletasks()
 
@@ -390,7 +390,7 @@ class MapMaker(ctk.CTkFrame):
 
     
     def selectionner_secteur(self, coordonnees):
-        #Charger les arrrondissements si ce n'est pas déjà fait
+        #Charger les arrondissements si ce n'est pas déjà fait
         if self.handler.secteurs is None:
             try:
                 self.handler.charger_secteurs()
@@ -424,7 +424,7 @@ class MapMaker(ctk.CTkFrame):
         #Juste garder les collisions du bon secteur 
         donnees_secteur = self.donnees_filtrees[self.donnees_filtrees["SECTEUR"] == secteur]
 
-        #Vérifier si le secteur en question a des collisions sinon arrêter l'éxécutuion de la fonction
+        #Vérifier si le secteur en question a des collisions sinon arrêter l'exécution de la fonction
         if donnees_secteur.empty:
             messagebox.showinfo("Aucun résultat", f"Aucune collision ne correspond aux filtres dans {secteur}.")
             return

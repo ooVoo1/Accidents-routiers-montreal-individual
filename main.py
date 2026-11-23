@@ -31,7 +31,7 @@ class MainApplication(ctk.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        #Créer pages
+        #Créer les pages
         self.page_accueil = ctk.CTkFrame(self, fg_color= "white")
         self.page_aide = Aide(self, fg_color="white")
         self.page_graphiques = Graphique(self, self.handler, fg_color="white")
@@ -40,7 +40,7 @@ class MainApplication(ctk.CTk):
         self.page_carte = Carte(self, self.handler, fg_color="white")
 
 
-        #Placer pages
+        #Placer les pages
         self.page_accueil.grid(row=0, column=0, sticky="nsew")
         self.page_graphiques.grid(row=0, column=0, sticky="nsew")
         self.page_aide.grid(row=0, column=0, sticky="nsew")
@@ -50,10 +50,10 @@ class MainApplication(ctk.CTk):
 
         self.page_actuelle = self.page_accueil
 
-        #Création page accueil
+        #Création de la page d'accueil
         self.creer_accueil()
         self.afficher_page(self.page_accueil)
-        #Pour que l'application s'ouvre comme du monde bordel
+        #Pour que l'application s'ouvre en plein écran
         self.after(0, lambda: self.state("zoomed"))
 
     def creer_accueil(self):
@@ -67,12 +67,12 @@ class MainApplication(ctk.CTk):
         place_logo = ctk.CTkFrame(self.page_accueil,fg_color="transparent")
         place_logo.grid(row=0, column=0, sticky="nsew")
 
-        # Loader et recadrer le logo
+        #Charger et recadrer le logo
         image = Image.open(self.handler.resource_path("images/logo_routesure.png"))
         largeur, hauteur = image.size
         image = image.crop((0, int(hauteur * 0.22), largeur, int(hauteur * 0.78)))
 
-        #Afficher et placer logo
+        #Afficher et placer le logo
         self.logo = ctk.CTkImage(light_image=image, dark_image=image, size=(610, 255))
         label_logo = ctk.CTkLabel(place_logo,image=self.logo,text="")
         label_logo.pack(expand=True)
@@ -109,69 +109,69 @@ class MainApplication(ctk.CTk):
         ("Graphique à barres", "Comparer différentes catégories de collisions.", self.page_barres),
         ("Carte interactive", "Explorer la répartition géographique des collisions à Montréal.", self.page_carte)]
 
-        #Mettre les icones des 3 gros boutons dans une variable
+        #Mettre les icônes des 4 gros boutons dans une liste pour faciliter leur création
         icones = ["icone_evolution.png", "icone_circulaire.png", "icone_barres.png", "icone_carte.png"]
 
-        #Pour garder les icones en mémoire
+        #Pour garder les icônes en mémoire
         self.icones_accueil = []
 
-        # Création des trois gros boutons
+        # Création des 4 gros boutons
         for i, (titre, description, page) in enumerate(pages):
             #Création et placement de l'objet
             gros_bouton = ctk.CTkFrame(conteneur, fg_color="#EDF5FF", corner_radius=12)
             gros_bouton.grid(row=0, column=i, padx=10, sticky="nsew")
 
-            # Centrer le contenu dans le bouton
+            #Centrer le contenu dans le bouton
             contenu = ctk.CTkFrame(gros_bouton, fg_color="transparent")
             contenu.pack(expand=True)
 
-            #Mettre icone du bouton
+            #Mettre l'icône du bouton
             icone = ctk.CTkImage(light_image=Image.open(self.handler.resource_path("images/" + icones[i])), size=(48, 48))
             self.icones_accueil.append(icone)
             image_gros_bouton = ctk.CTkLabel(contenu, image=icone, text="")
             image_gros_bouton.pack(pady=(0, 12))
 
-            # Titre du bouton
+            #Titre du bouton
             titre_gros_bouton = ctk.CTkLabel(contenu, text=titre, font=("Arial", 19, "bold"), text_color="#133E70")
             titre_gros_bouton.pack(pady=(0, 10))
 
-            # Description du graphique associé au bouton
+            #Description du graphique associé au bouton
             texte_gros_bouton = ctk.CTkLabel(contenu, text=description, font=("Arial", 14), text_color="#64748B", wraplength=260)
             texte_gros_bouton.pack(padx=15)
 
-            # Rendre bouton clickable (parceque pour l'instant ce n'était qu'un carré avec du texte et une image)
+            #Rendre les boutons cliquables (parce que pour l'instant ce n'était qu'un carré inerte avec du texte et une image)
             for widget in (gros_bouton, contenu, image_gros_bouton, titre_gros_bouton, texte_gros_bouton):
                 widget.bind("<Button-1>", lambda event, p=page: self.afficher_page(p))
             
-        # place des boutons aide et charger (AC)
+        #Place des boutons aide et charger (AC)
         place_boutons_AC = ctk.CTkFrame(self.page_accueil,fg_color="transparent")
         place_boutons_AC.grid(row=3, column=0, sticky="nsew")
 
-        # Pour que les boutons aide et charger soient alignés
+        #Pour que les boutons aide et charger soient alignés
         ligne_boutons = ctk.CTkFrame(place_boutons_AC, fg_color="transparent")
         ligne_boutons.pack(expand=True)
 
-        # image de fichier pour bouton charger
+        #Image de fichier pour le bouton charger
         self.icone_charger = ctk.CTkImage(light_image=Image.open(self.handler.resource_path("images/icone_charger.png")), size=(24, 24))
 
-        # bouton charger CSV
+        #Bouton charger CSV
         bouton_charger = ctk.CTkButton(ligne_boutons, text="Charger des données CSV", image=self.icone_charger, compound="left",
         command=self.charger_et_actualiser, font=("Arial", 15, "bold"), height=52, width=290, corner_radius=10)
-        # placer le bouton
+        #Placer le bouton
         bouton_charger.pack(side="left", padx=8)
 
-        # image de "?" pour le bouton aide
+        #Icône de "?" pour le bouton aide
         self.icone_aide = ctk.CTkImage(light_image=Image.open(self.handler.resource_path("images/icone_aide.png")), size=(22, 22))
 
-        # bouton aide
+        #Bouton d'aide
         bouton_aide = ctk.CTkButton(ligne_boutons, text="Aide", image=self.icone_aide, compound="left", command=lambda: self.afficher_page(self.page_aide),
         fg_color="transparent", text_color="#1669B5", border_width=1, border_color="#CDD8E4", font=("Arial", 15), height=52, width=145, corner_radius=10)
 
-        # placer le bouton
+        #Placer le bouton
         bouton_aide.pack(side="left", padx=8)
 
     def afficher_page(self, page):
-        # Mettre la page active dans la mémoire
+        #Mettre la page active dans la mémoire
         self.page_active = page
         pages = (
             self.page_accueil,
@@ -182,17 +182,17 @@ class MainApplication(ctk.CTk):
             self.page_carte
         )
 
-        # Masquer les pages inactives
+        #Masquer les pages inactives
         for p in pages:
             if p == page:
                 p.grid()
             else:
                 p.grid_remove()
 
-        # Afficher la page sélectionnée
+        #Afficher la page sélectionnée
         page.tkraise()
 
-        # Changer la page actuelle et actualiser cette page.
+        #Changer la page actuelle et actualiser cette page.
         self.page_actuelle = page
         self.actualiser_page_active()
 
@@ -229,16 +229,12 @@ class MainApplication(ctk.CTk):
                 
     def charger_et_actualiser(self):
         if self.handler.charger_csv():
-            self.page_graphiques.graph.update_graph(self.page_graphiques.selection.get(), self.page_graphiques.texte_stats)
-            self.page_pie.pie_graph.update_pie(self.page_pie.selection_annees.get(), self.page_pie.texte_stats)
-            self.page_barres.barres_graphe.update_bar(self.page_barres.selection_annees_bar.get(),self.page_barres.selection_type.get(),self.page_barres.texte_stats)
-            
             #Supprimer les collisions sur la carte car elles ne sont peut-être pas dans le CSV que l'on charge à l'instant 
             #(ne fait rien si c'est la première fois qu'on charge un CSV)
             self.page_carte.map.carte.delete_all_marker()
             self.page_carte.map.icones_groupes = []
 
-            #Effacer toutes les données et le filtres appliqués avec le dernier CSV parceque tout ça pourrait ne pas être dans le nouveau CSV
+            #Effacer toutes les données et les filtres appliqués avec le dernier CSV parce que tout ça pourrait ne pas être dans le nouveau CSV
             self.page_carte.map.filtres_actuels = None
             self.page_carte.map.donnees_filtrees = None
             self.page_carte.map.donnees_filtrees_geo = pd.DataFrame()
@@ -246,11 +242,17 @@ class MainApplication(ctk.CTk):
             #Effacer les statistiques sous la carte
             self.page_carte.mettre_a_jour_stats(pd.DataFrame())
             self.page_carte.label_valeur_geolocalisees.configure(text="0")
-            #Actualiser les dropdown menu pour la carte
+
+            #Réinitialiser les filtres pour ne pas garder les choix de l'ancien CSV
+            self.page_carte.selection.set("Toutes les années")
+            self.page_carte.selection_gravite.set("Toutes les gravités")
+            self.page_carte.selection_victime.set("Aucun filtre")
+            self.page_carte.selection_vehicule.set("Aucun filtre")
+
+            #Actualiser les dropdown menus pour la carte
             self.page_carte.actualiser_dropdowns()
-            #Actualiser une autre fois pour s'assurer que les données viennent de la page courante. Parceque nos update sur les 
-            #graphes plus haut actualisent tous les données et comme le dernier appel est avec le graphique à barre, sans cette ligne,
-            #nous risquons d'exporter les données ou le graphique de la page graphique à barre même sans y être.
+
+            #Actualiser la page active pour que les graphiques et les données correspondent au nouveau CSV
             self.actualiser_page_active()
         
     def create_menu(self):
@@ -288,7 +290,7 @@ class MainApplication(ctk.CTk):
         # Graphique à barres
         graphiques_menu.add_command(label="Graphique à barres", command=lambda: self.afficher_page(self.page_barres))
 
-    #Fonction qui adapte l'exportation des données pour quelle soit viable avec la carte
+    #Fonction qui adapte l'exportation des données pour qu'elle soit viable avec la carte
     def sauvegarder_donnees_actuelles(self):
     #Si on est sur la carte, récupérer ses données avec la fonction de map_maker
         if self.page_actuelle == self.page_carte:

@@ -1,5 +1,6 @@
 import pandas as pd
 import geopandas as gpd
+import json
 
 from tkinter import filedialog, messagebox
 
@@ -49,7 +50,7 @@ class DataHandler():
                 raise ValueError("Le fichier CSV ne contient pas toutes les colonnes requises.\n\n"
                 "Colonnes manquantes :\n"+ "\n".join(colonnes_manquantes))
 
-            # Accepter le fichier seulement après avoir checké si on as toutes les colonnes
+            #Accepter le fichier seulement après avoir vérifié si on a toutes les colonnes
             self.df = df_temporaire
             self.chemin_courante = chemin
 
@@ -146,31 +147,27 @@ class DataHandler():
         #Juste garder les collisions avec des coordonnées possibles
         valides = latitudes.between(-90, 90) & longitudes.between(-180, 180)
 
-        #Crée une nouvelle colonne dans le dataframe pour assigner les secteurs et remplis cette colonne de NA
+        #Créer une nouvelle colonne dans le dataframe pour assigner les secteurs et remplir cette colonne de NA
         #pour dire qu'aucun secteur n'a été assigné encore
         #Arrêter l'exécution de la fonction si il n'y a aucune collision avec des coordonnées possibles
         if not valides.any():
             self.df["SECTEUR"] = pd.NA
             return
-        
-        #Arrêter l'exécution de la fonction si il n'y a aucune collision avec des coordonnées possibles
-        if not valides.any():
-            return
 
         #Mettre les coordonnées sous un format que geopandas peut utiliser
         #On crée un "dataframe géographique" (.GeoDataFrame), sa principale caractéristique est le fait qu'il peut contenir
-        #une colonne "geometry" qui contient des objets du type géométriques (points, lignes ou polygones)
+        #une colonne "geometry" qui contient des objets du type géométrique (points, lignes ou polygones)
         #"index=" détermine quels indices on veut donner aux lignes de notre 
-        #nouveau dataframe géographique, dans ce cas on prend seulement les indices "valides" parceque on veut remettre les secteurs
+        #nouveau dataframe géographique, dans ce cas on prend seulement les indices "valides" parce que on veut remettre les secteurs
         #trouvés dans notre dataframe normal plus tard. "geometry=" cet argument fournit la colonne "géométrique" du GeoDataFrame
-        #(dans notre cas des points) .points_from_xy est utilisé car nous avons des valeurs de longitude et de latitude associée 
+        #(dans notre cas des points) .points_from_xy est utilisé car nous avons des valeurs de longitude et de latitude associées
         #exactement comme des valeurs de x et y dans un plan cartésien. "crs=" veut dire Coordinate Reference System, on l'utilise 
         #pour indiquer nos données sont sous quel format le code "EPSG:4326" correspond à WGS 84 le format sous lequel mon GEOJson est.
         points = gpd.GeoDataFrame(index=self.df.index[valides], geometry=gpd.points_from_xy(longitudes[valides], latitudes[valides]), crs="EPSG:4326")
       
         #Jointure spatiale (qui donne le dataframe final) entre points et secteurs, c'est plutôt compliqué mais en gros ça
         #associe chaque point au secteur auquel il appartient. "how="left"" indique qu'on veut garder toutes les lignes 
-        #du dataframe de gauche, en l'occurence "points". Ceci signifie qu'on garde tout les points même ceux qui ne sont pas 
+        #du dataframe de gauche, en l'occurrence "points". Ceci signifie qu'on garde tous les points même ceux qui ne sont pas 
         # associés à un secteur.  "predicate="within"" est la condition géométrique: on demande à geopandas de trouver pour 
         #chaque collision le polygone (l'arrondissement) auquel elle appartient. 
         resultats = gpd.sjoin(points, secteurs, how="left", predicate="within")
@@ -179,23 +176,28 @@ class DataHandler():
         #"groupby(level=0)" groupe ensemble toutes les lignes qui ont le même indice et ".first" ne garde que la première
         noms_secteurs = resultats["NOM"].groupby(level=0).first()
 
-        #Créer la colonne qui vas contenir les secteurs et la remplir de NA pour signifier qu'il n'y a rien d'assigné pour l'instant
+        #Créer la colonne qui va contenir les secteurs et la remplir de NA pour signifier qu'il n'y a rien d'assigné pour l'instant
         self.df["SECTEUR"] = pd.NA
         
         #Mettre les secteurs dans notre dataframe original qui est utilisé partout.
         self.df.loc[noms_secteurs.index, "SECTEUR"] = noms_secteurs
 
-    #Fontion qui s'occupe de charger le GEOJson 
+    #Fonction qui s'occupe de charger le GEOJson 
     def charger_secteurs(self):
-        #Charger le GEOJson contenant les limites administratives de l'île de montréal seulement si ce n'est pas déjà fait
+        #Charger le GEOJson contenant les limites administratives de l'île de Montréal seulement si ce n'est pas déjà fait
         if self.secteurs is None:
-            secteurs = gpd.read_file(self.resource_path("arrondissements_montreal.geojson"))
+            #Lire le fichier GeoJSON avec le module json de Python
+            with open(self.resource_path("arrondissements_montreal.geojson"), "r", encoding="utf-8") as fichier:
+                donnees = json.load(fichier)
 
-            #Vérifier que le fichier contient la colonne "NOM" parceque si nous n'avons pas le nom des arrondissements, tout ça sert à rien
+            #Convertir les données GeoJSON en GeoDataFrame  
+            secteurs = gpd.GeoDataFrame.from_features(donnees["features"], crs="EPSG:4326")
+
+            #Vérifier que le fichier contient la colonne "NOM" parce que si nous n'avons pas le nom des arrondissements, tout ça sert à rien
             if "NOM" not in secteurs.columns:
                 raise ValueError("La colonne NOM est absente du GeoJSON.")
 
-            #Seulement garder les deux colonnes dont a de besoin pour la suite (le nom des secteurs et le polygone qui les 
-            #représente dans "geometry") et convertir en "EPSG:4326" (on doit être utiliser le même système partout)
+            #Seulement garder les deux colonnes dont on a besoin pour la suite (le nom des secteurs et le polygone qui les 
+            #représente dans "geometry") et convertir en "EPSG:4326" (on doit utiliser le même système partout)
             #Garder les secteurs en mémoire pour que la carte puisse être cliquable sans tout recalculer en tout temps.
             self.secteurs = secteurs[["NOM", "geometry"]].to_crs("EPSG:4326")
