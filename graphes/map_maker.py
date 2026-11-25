@@ -104,7 +104,7 @@ class MapMaker(ctk.CTkFrame):
             #Actualiser les filtres pour que les statistiques n'affichent pas des faussetés et que des collisions qui n'ont 
             #pas raison d'être réapparaissent après avoir zoomé
             self.filtres_actuels = None
-            # Réinitialiser le compteur des collisions affichées sinon il ne s'actualise pas tout seul
+            #Réinitialiser le compteur des collisions affichées sinon il ne s'actualise pas tout seul
             self.master.label_valeur_geolocalisees.configure(text="0")
             messagebox.showinfo("Aucun résultat", "Aucune collision à afficher pour ces filtres.")
             return
@@ -136,7 +136,9 @@ class MapMaker(ctk.CTkFrame):
             icone = self.creer_icone_groupe(groupe.nombre)
             self.icones_groupes.append(icone)
             self.carte.set_marker(groupe.latitude, groupe.longitude, icon=icone, icon_anchor="center")
-        
+
+    #Fonction qui s'occupe de créer l'icône qui va représenter un regroupement de collisions sur la carte.
+    #Prend en compte le nombre de collisions pour déterminer l'aspect de l'icône
     def creer_icone_groupe(self, nombre):
         #Choisir la couleur, la taille de l'icône et taille du texte selon le nombre de collisions à afficher
         if nombre < 25:
@@ -203,7 +205,8 @@ class MapMaker(ctk.CTkFrame):
         else:
             #À partir de 16, retourner None comme signal à update_map pour qu'elle affiche les points individuels, sans regroupements
             return None
-
+        
+    #Fonction qui surveille constaments les interactions avec la carte pour actualiser l'affichage quand nécessaire
     def surveiller_zoom(self):
         #Déterminer le bon pas pour le zoom actuel
         nouveau_pas = self.pas_pour_zoom()
@@ -231,7 +234,7 @@ class MapMaker(ctk.CTkFrame):
         #Continuer de surveiller
         self.after(400, self.surveiller_zoom)
 
-    
+    #Fonction qui est appelée pour afficher les points individuels quand le zoom est assez fort
     def afficher_points(self, donnees):
         #Récupérer la taille de la carte
         largeur = self.carte.canvas.winfo_width()
@@ -255,7 +258,7 @@ class MapMaker(ctk.CTkFrame):
         #Mettre à jour la statistique du nombre de collisions affichées avec le vrai nombre de collisions qu'on affiche (1500 au maximum)
         self.master.label_valeur_geolocalisees.configure(text=f"{len(visibles):,}".replace(",", " "))
 
-    #Nouvelle version de recentrer_montreal pour optimiser la performance
+    #Fonction qui est reliée au bouton "Recentrer sur Montréal"
     def recentrer_montreal(self):
         #On supprime les anciens points/regroupements avant de déplacer la carte comme ça l'application
         #ne les repositionne pas tous après avoir dézoomé avant de les enlever (c'était super long)
@@ -275,6 +278,7 @@ class MapMaker(ctk.CTkFrame):
             annee, gravite, colonne_victime, colonne_vehicule = self.filtres_actuels
             self.update_map(annee, gravite, colonne_victime, colonne_vehicule)
 
+    #Actualise la statistique du nombre de "Collisions affichées"
     def actualiser_nombre_visible(self):
         #Récupérer la taille de la carte
         largeur = self.carte.canvas.winfo_width()
@@ -292,7 +296,7 @@ class MapMaker(ctk.CTkFrame):
         nombre = len(visibles)
         self.master.label_valeur_geolocalisees.configure(text=f"{nombre:,}".replace(",", " "))
     
-    #Fonction qui sauvegarde la portion de la carte actuellement visible
+    #Fonction qui sauvegarde la portion de la carte actuellement visible pour l'export en png
     def sauvegarder_carte(self):
         #".winfo_ismapped()" vérifie si un widget est actuellement visible à l'écran (dans notre cas la carte) et on affiche 
         #un message d'erreur si ce n'est pas le cas, parceque l'export fonctionne avec une capture d'écran donc si la carte
@@ -388,7 +392,8 @@ class MapMaker(ctk.CTkFrame):
         except Exception as erreur:
             messagebox.showerror("Erreur d'exportation", str(erreur))
 
-    
+    #Fonction qui reçoit les coordonnées du double-clic de l'utilisateur et qui s'occupe de les associer
+    #à un secteur, de filtrer les données pour ce secteur et de créer la fenêtre popup avec la heatmap
     def selectionner_secteur(self, coordonnees):
         #Charger les arrondissements si ce n'est pas déjà fait
         if self.handler.secteurs is None:
@@ -458,5 +463,4 @@ class MapMaker(ctk.CTkFrame):
         #Supprimer les colonnes qui ne contiennent aucune donnée
         donnees = donnees.dropna(axis=1, how="all")
 
-        return donnees      
-
+        return donnees
